@@ -1,8 +1,11 @@
-name: 'appname532'
+name: 'canadian_house_prices'
 channels:
     - conda-forge
     - defaults
 dependencies:
+    - python=3.12
+    - pandas=2.2
+    - altair=5.3
     - ipykernel
     - altair-all
     - dash
@@ -10,11 +13,6 @@ dependencies:
     - plotly
     - tabulate  # df.to_markdown()
     - lxml  # pd.read_html()
-    - r-base
-    - r-tidyverse
-    - r-shiny
-    - r-languageserver
-    - r-plotly
-    - pip
+    - pip=24.0
     - pip:
         - dash-vega-components
