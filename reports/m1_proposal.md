@@ -44,7 +44,7 @@ These insights will allow Joel to better understand the market dynamics, enablin
 
 ## App Sketch and Description:
 
-![Real Estate Dashboard Image](images\moq_up Dashboard.png)
+![Real Estate Dashboard Image](../images/moq_up_Dashboard.png)
 
 **Description of Each Part to Input for Visuals:**
 *(This section is for the sketch and description of the visual components you plan to include in the application, such as charts, maps, or other types of data visualizations that will assist in analyzing the real estate market.)*
