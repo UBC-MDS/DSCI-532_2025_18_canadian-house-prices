@@ -1,16 +1,52 @@
-# Vancouver House Prices
+# Canadian House Prices Dashboard
 
-## Overview
+Welcome to the **Canadian House Prices Dashboard** repository for DSCI 532 (2025). Our group has developed an interactive dashboard to explore housing price data across Canada's top 45 cities.
 
-The Vancouver House Prices project aims to simplify the home buying process by providing an intuitive, user-friendly tool for searching properties. Users can explore available listings based on their specific budget, preferred locations, and personalized criteria such as size and features.
+## Group Members
 
-This project seeks to empower homebuyers by offering tailored recommendations, making it easier to navigate Vancouver’s competitive real estate market and find their ideal home.
+- Hui Tang
+- Dominic Lam
+- Colombe Tolokin
+- Fazeeia Mohammed
 
-## Motivation and Purpose
+## Project Overview
 
-The motivation behind this project is to bridge the gap between overwhelming real estate listings and the personalized needs of homebuyers. Key objectives include:
-	•	Budget-friendly search: Find homes that fit within a specific price range.
-	•	Location preferences: Prioritize desired neighborhoods or areas of interest.
-	•	Customizable criteria: Filter listings by property size, key features, and more.
+The dashboard allows users to:
+- **Visualize Housing Trends:** Compare house prices and related features across major Canadian cities.
+- **Explore Data:** Filter data by city, price range, number of bedrooms/bathrooms, and other key variables.
+- **Support Decision-Making:** Provide insights for homebuyers, investors, and policymakers.
 
-Our goal is to create a streamlined and enjoyable user experience for those searching for their next home in Vancouver.
+## Getting Started
+
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/UBC-MDS/DSCI-532_2025_18_canadian-house-prices.git
+   ```
+2.	**Set Up the Environment**:
+	```bash
+	conda env create -f environment.yml
+	conda activate canadian_house_prices 
+    ```
+3.	**Run the Application**:
+	```bash
+	python src/app.py
+    ```
+
+## Contributing
+
+Contributions are welcome, and we appreciate your interest in improving this project! We have a dedicated [CONTRIBUTING.md](CONTRIBUTING.md) file in this repository that outlines:
+
+- How to report bugs and request new features
+- How to set up a local environment for development
+- Our code of conduct and guidelines
+
+If you’d like to get involved, please read through the [CONTRIBUTING.md](CONTRIBUTING.md) file first. Feel free to open an issue or a pull request if you have ideas for improvements or find any bugs.
+
+## Future Work
+
+We plan to further develop the dashboard prototype, refine the visualizations, and incorporate user feedback in future milestones.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE.md).
+
