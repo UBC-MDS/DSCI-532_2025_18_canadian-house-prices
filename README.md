@@ -24,7 +24,7 @@ The dashboard allows users to:
    ```
 2.	**Set Up the Environment**:
 	```bash
-	conda env create -f environment.yaml
+	conda env create -f environment.yml
 	conda activate canadian-house-prices-env
     ```
 3.	**Run the Application**:
