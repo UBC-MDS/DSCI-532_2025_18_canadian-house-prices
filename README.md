@@ -32,6 +32,16 @@ The dashboard allows users to:
 	python src/app.py
     ```
 
+## Contributing
+
+Contributions are welcome, and we appreciate your interest in improving this project! We have a dedicated [CONTRIBUTING.md](CONTRIBUTING.md) file in this repository that outlines:
+
+- How to report bugs and request new features
+- How to set up a local environment for development
+- Our code of conduct and guidelines
+
+If you’d like to get involved, please read through the [CONTRIBUTING.md](CONTRIBUTING.md) file first. Feel free to open an issue or a pull request if you have ideas for improvements or find any bugs.
+
 ## Future Work
 
 We plan to further develop the dashboard prototype, refine the visualizations, and incorporate user feedback in future milestones.
@@ -39,3 +49,4 @@ We plan to further develop the dashboard prototype, refine the visualizations, a
 ## License
 
 This project is licensed under the [MIT License](LICENSE.md).
+
