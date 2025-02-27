@@ -13,6 +13,7 @@ df = pd.read_csv(file_path).dropna()
 
 # Initialize Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+server = app.server
 
 
 # Layout
@@ -167,4 +168,4 @@ def update_dashboard(_):
 
 # Run the app
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(debug=False)
