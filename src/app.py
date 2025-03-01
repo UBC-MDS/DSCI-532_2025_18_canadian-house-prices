@@ -31,6 +31,7 @@ app.layout = dbc.Container(fluid=True, children=[
         "box-shadow": "0 2px 5px 0 rgba(0,0,0,0.2)"
     }),
 
+
     dbc.Row([
         dbc.Col([
             html.H3("Filters", className="mb-4", style={"color": "#FFFFFF"}),
@@ -101,6 +102,63 @@ app.layout = dbc.Container(fluid=True, children=[
                 )
             ], className="mb-4")
 
+
+
+    dbc.Row([
+        dbc.Col([
+            html.H3("Filters", className="mb-4", style={"color": "#FFFFFF"}),
+            # City Dropdown Menu
+            dbc.Row([
+                # dbc.Label("City", html_for="city-filter", className="mb-4", width=12, style={"color": "#FFFFFF"}),
+                html.H5("City", className="mb-4", style={"color": "#FFFFFF"}),
+                dcc.Dropdown(
+                    id="city-filter",
+                    options=[{"label": city, "value": city} for city in df["City"].unique()],
+                    multi=True,
+                    placeholder="Select City",
+                    # Default Selected Cities
+                    value=["Vancouver", "Toronto", "Montreal", "Ottawa"]
+                )
+            ], className="mb-4"),
+            # Province Multi-Select Dropdown
+            dbc.Row([
+                # dbc.Label("Province", html_for="province-filter", width=12, style={"color": "#FFFFFF"}),
+                html.H5("Province", className="mb-4", style={"color": "#FFFFFF"}),
+                dcc.Dropdown(
+                    id="province-filter",
+                    options=[{"label": province, "value": province} for province in df["Province"].unique()],
+                    multi=True,
+                    placeholder="Select Province"
+                )
+            ], className="mb-4"),
+            # Bedrooms Range Slider
+            dbc.Row([
+                # dbc.Label("Bedrooms", html_for="bedrooms-slider", width=12, style={"color": "#FFFFFF"}),
+                html.H5("Bedrooms", className="mb-4", style={"color": "#FFFFFF"}),
+                dcc.RangeSlider(
+                    id="bedrooms-slider",
+                    min=df["Number_Beds"].min(),
+                    max=df["Number_Beds"].max(),
+                    step=1,
+                    marks={i: str(i) for i in range(df["Number_Beds"].min(), df["Number_Beds"].max() + 1)},
+                    tooltip={"always_visible": True, "placement": "bottom"},
+                    value=[df["Number_Beds"].min(), df["Number_Beds"].max()]
+                )
+            ], className="mb-4"),
+            # Bathrooms Range Slider
+            dbc.Row([
+                # dbc.Label("Bathrooms", html_for="bathrooms-slider", width=12, style={"color": "#FFFFFF"}),
+                html.H5("Bathrooms", className="mb-4", style={"color": "#FFFFFF"}),
+                dcc.RangeSlider(
+                    id="bathrooms-slider",
+                    min=df["Number_Baths"].min(),
+                    max=df["Number_Baths"].max(),
+                    step=1,
+                    marks={i: str(i) for i in range(df["Number_Baths"].min(), df["Number_Baths"].max() + 1)},
+                    tooltip={"always_visible": True, "placement": "bottom"},
+                    value=[df["Number_Baths"].min(), df["Number_Baths"].max()]
+                )
+            ], className="mb-4"),
         ], width=2, style={
             "background-color": "#053FA8",
             "padding": "20px",
@@ -411,6 +469,7 @@ def update_dashboard(selected_cities, selected_provinces, bedrooms_range, bathro
         median_price_comparison,
         geospatial_price_distribution
     )
+
 
 @app.callback(
     Output("city-filter", "options"),
