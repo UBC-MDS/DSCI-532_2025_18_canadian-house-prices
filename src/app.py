@@ -86,6 +86,21 @@ app.layout = dbc.Container(fluid=True, children=[
                     value=[df["Number_Baths"].min(), df["Number_Baths"].max()]
                 )
             ], className="mb-4"),
+
+            # Reset Filters Button
+            dbc.Row([
+                dbc.Col(
+                    dbc.Button(
+                        "Reset Filters",
+                        id="reset-button",
+                        color="primary",
+                        style={"background-color": "#0E1731", "color": "#FFFFFF", "border-color": "#053FA8", "font-size": "20px"},  # Match sidebar color
+                        className="mt-2"
+                    ),
+                    width=12
+                )
+            ], className="mb-4")
+
         ], width=2, style={
             "background-color": "#053FA8",
             "padding": "20px",
@@ -397,6 +412,37 @@ def update_dashboard(selected_cities, selected_provinces, bedrooms_range, bathro
         geospatial_price_distribution
     )
 
+@app.callback(
+    Output("city-filter", "options"),
+    Input("province-filter", "value")
+)
+def update_city_options(selected_provinces):
+    if selected_provinces and len(selected_provinces) > 0:
+        # Filter DataFrame to include only rows with selected provinces
+        filtered_df = df[df["Province"].isin(selected_provinces)]
+        # Get unique cities from the filtered DataFrame
+        city_options = [{"label": city, "value": city} for city in filtered_df["City"].unique()]
+    else:
+        # If no provinces selected, return all cities
+        city_options = [{"label": city, "value": city} for city in df["City"].unique()]
+    return city_options
+
+#reset filters
+@app.callback(
+    [Output("city-filter", "value"),
+     Output("province-filter", "value"),
+     Output("bedrooms-slider", "value"),
+     Output("bathrooms-slider", "value")],
+    Input("reset-button", "n_clicks"),
+    prevent_initial_call=True
+)
+def reset_filters(n_clicks):
+    return (
+        ["Vancouver", "Toronto", "Montreal", "Ottawa"],  # Reset city to default
+        [],  # Reset province to no selection
+        [df["Number_Beds"].min(), df["Number_Beds"].max()],  # Reset bedrooms to full range
+        [df["Number_Baths"].min(), df["Number_Baths"].max()]  # Reset bathrooms to full range
+    )
 
 @app.callback(
     Output("map-figure", "figure"),
