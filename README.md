@@ -2,6 +2,11 @@
 
 Welcome to the **Canadian House Prices Dashboard** repository for DSCI 532 (2025)! Our group has developed an interactive dashboard to explore housing price data across Canada's top 45 cities. Whether you’re a homebuyer, investor, or policymaker, this dashboard is designed to offer valuable insights into the Canadian real estate market.
 
+## Demo
+
+Check out our dashboard in action:
+
+[![Demo GIF of the Dashboard](images/demo.gif)](images/demo.gif)
 
 ## Deployed Dashboard
 
