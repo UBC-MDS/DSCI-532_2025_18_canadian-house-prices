@@ -10,7 +10,7 @@ def create_summary_cards():
                     "box-shadow": "0 4px 8px 0 rgba(0,0,0,0.2)",
                     "border-radius": "10px",
                     "padding": "10px",
-                    "background-color": "#FFFFFF"
+                    "background-color": "#0E1731"
                 }
             ),
             width=4
@@ -22,7 +22,7 @@ def create_summary_cards():
                     "box-shadow": "0 4px 8px 0 rgba(0,0,0,0.2)",
                     "border-radius": "10px",
                     "padding": "10px",
-                    "background-color": "#FFFFFF"
+                    "background-color": "#0E1731"
                 }
             ),
             width=4
@@ -34,7 +34,7 @@ def create_summary_cards():
                     "box-shadow": "0 4px 8px 0 rgba(0,0,0,0.2)",
                     "border-radius": "10px",
                     "padding": "10px",
-                    "background-color": "#FFFFFF"
+                    "background-color": "#0E1731"
                 }
             ),
             width=4
