@@ -189,15 +189,15 @@ def register_callbacks(app):
         # Return all outputs
         return (
             html.Div([
-                html.H5("Median Price", style={"margin": "0", "color": "#FF0000"}),  # Red title
+                html.H5("Median Price", style={"margin": "0", "color": "#FFFFFF"}),  # WHITE title
                 html.H3(f"${median_price:,.0f}", style={"margin": "0", "color": "#1E88E5"})
             ]),
             html.Div([
-                html.H5("Average Bedrooms", style={"margin": "0", "color": "#FF0000"}), # Red title
+                html.H5("Average Bedrooms", style={"margin": "0", "color": "#FFFFFF"}), # WHITE title
                 html.H3(f"{avg_bedrooms:.2f}", style={"margin": "0", "color": "#1E88E5"})
             ]),
             html.Div([
-                html.H5("Price Range", style={"margin": "0", "color": "#FF0000"}), # Red title
+                html.H5("Price Range", style={"margin": "0", "color": "#FFFFFF"}), # WHITE title
                 html.H3(f"${min_price:,.0f} - ${max_price:,.0f}", style={"margin": "0", "color": "#1E88E5"})
             ]),
             city_price_distribution,
