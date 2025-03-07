@@ -20,7 +20,6 @@ def register_chart_callbacks(app):
          Input("bathrooms-slider", "value")]
     )
     def update_dashboard(selected_cities, selected_provinces, bedrooms_range, bathrooms_range):
-        # Apply filtering logic
         filtered_df = df.copy()
 
         if selected_cities:
@@ -38,56 +37,38 @@ def register_chart_callbacks(app):
                 (filtered_df["Number_Baths"] <= bathrooms_range[1])
             ]
 
-        # Calculate summary stats
-        median_price = filtered_df["Price"].median() if not filtered_df.empty else 0
-        avg_bedrooms = filtered_df["Number_Beds"].mean() if not filtered_df.empty else 0
-        min_price = filtered_df["Price"].min() if not filtered_df.empty else 0
-        max_price = filtered_df["Price"].max() if not filtered_df.empty else 0
-
-        # Ensure charts are created even if no data is available
+        # Ensure function always returns 7 outputs
         if filtered_df.empty:
-            city_price_distribution = go.Figure()
-            price_vs_bedrooms = go.Figure()
-            median_price_comparison = go.Figure()
-            geospatial_price_distribution = go.Figure()
-        else:
-            city_price_distribution = px.box(filtered_df, x="City", y="Price", title="City Price Distribution")
-            price_vs_bedrooms = px.box(filtered_df, x="Number_Beds", y="Price", title="Price vs Number of Bedrooms")
-            median_price_comparison = go.Figure(data=[go.Bar(
-                x=filtered_df["City"].unique(),
-                y=filtered_df.groupby("City")["Price"].median(),
-                marker=dict(color="#1E88E5")
-            )])
+            return (
+                html.Div("No Data", style={"color": "red"}),
+                html.Div("No Data", style={"color": "red"}),
+                html.Div("No Data", style={"color": "red"}),
+                go.Figure(),
+                go.Figure(),
+                go.Figure(),
+                go.Figure()
+            )
 
-            if selected_cities:
-                map_df = filtered_df.groupby("City").agg({
-                    "Latitude": "mean",
-                    "Longitude": "mean",
-                    "Price": "median",
-                    "Number_Beds": "mean"
-                }).reset_index()
-            else:
-                map_df = pd.DataFrame()
+        # Calculate statistics
+        median_price = f"${filtered_df['Price'].median():,.0f}"
+        avg_bedrooms = f"{filtered_df['Number_Beds'].mean():.2f}"
+        price_range = f"${filtered_df['Price'].min():,.0f} - ${filtered_df['Price'].max():,.0f}"
 
-            if not map_df.empty:
-                geospatial_price_distribution = px.scatter_mapbox(
-                    map_df,
-                    lat="Latitude",
-                    lon="Longitude",
-                    color="Price",
-                    size="Price",
-                    title="Geospatial Price Distribution",
-                    mapbox_style="carto-positron",
-                    zoom=2
-                )
-            else:
-                geospatial_price_distribution = go.Figure()
+        # Create figures
+        city_price_distribution = px.box(filtered_df, x="City", y="Price", title="City Price Distribution")
+        price_vs_bedrooms = px.box(filtered_df, x="Number_Beds", y="Price", title="Price vs Number of Bedrooms")
+        median_price_comparison = go.Figure(data=[go.Bar(
+            x=filtered_df["City"].unique(),
+            y=filtered_df.groupby("City")["Price"].median(),
+            marker=dict(color="#1E88E5")
+        )])
 
-        # Ensure the function always returns 7 values
+        geospatial_price_distribution = go.Figure()
+
         return (
-            html.Div(f"${median_price:,.0f}"),
-            html.Div(f"{avg_bedrooms:.2f}"),
-            html.Div(f"${min_price:,.0f} - ${max_price:,.0f}"),
+            html.Div(median_price),
+            html.Div(avg_bedrooms),
+            html.Div(price_range),
             city_price_distribution,
             price_vs_bedrooms,
             median_price_comparison,

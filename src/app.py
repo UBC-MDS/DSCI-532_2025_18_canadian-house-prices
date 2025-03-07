@@ -7,14 +7,12 @@ from callbacks.charts import register_chart_callbacks
 # Initialize Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-# Expose `server` for deployment
 server = app.server  
 
-# Set up app layout and register callbacks
 app.layout = create_layout()
+
 register_filter_callbacks(app)
 register_chart_callbacks(app)
 
 if __name__ == "__main__":
-    app.run_server(debug=False)
-
+    app.run_server(debug=False)  

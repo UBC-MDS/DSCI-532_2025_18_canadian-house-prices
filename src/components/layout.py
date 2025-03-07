@@ -1,10 +1,5 @@
 import dash_bootstrap_components as dbc
 from dash import html
-import os
-import sys
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 from components.sidebar import sidebar
 from components.summary_cards import summary_cards
 from components.charts import charts_section
