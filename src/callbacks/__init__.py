@@ -1,0 +1,2 @@
+from .filters import register_callbacks as register_filters_callbacks
+from .charts import register_callbacks as register_charts_callbacks
