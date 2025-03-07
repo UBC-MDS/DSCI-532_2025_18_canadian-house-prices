@@ -1,18 +1,13 @@
 import dash
 import dash_bootstrap_components as dbc
-from components.layout import create_layout
-from callbacks.filters import register_filter_callbacks
-from callbacks.charts import register_chart_callbacks
+from components.layout import serve_layout
 
-# Initialize Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+server = app.server
 
-server = app.server  
+app.layout = serve_layout()
 
-app.layout = create_layout()
-
-register_filter_callbacks(app)
-register_chart_callbacks(app)
+import callbacks.callbacks
 
 if __name__ == "__main__":
-    app.run_server(debug=False)  
+    app.run_server(debug=True)
