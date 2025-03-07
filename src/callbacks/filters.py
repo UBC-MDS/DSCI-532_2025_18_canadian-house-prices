@@ -1,5 +1,5 @@
 from dash import Output, Input
-from utils.data_loader import load_data
+from src.utils.data_loader import load_data
 
 df = load_data()
 

@@ -1,8 +1,8 @@
 import dash_bootstrap_components as dbc
 from dash import html
-from .sidebar import create_sidebar
-from .summary_cards import create_summary_cards
-from .charts import create_map_card, create_chart1_card, create_chart2_card, create_chart3_card
+from src.components.sidebar import create_sidebar
+from src.components.summary_cards import create_summary_cards
+from src.components.charts import create_map_card, create_chart1_card, create_chart2_card, create_chart3_card
 
 def create_layout(df):
     return dbc.Container(fluid=True, children=[

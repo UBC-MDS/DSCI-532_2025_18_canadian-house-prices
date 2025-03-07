@@ -3,7 +3,7 @@ from dash import html
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from utils.data_loader import load_data
+from src.utils.data_loader import load_data
 
 df = load_data()
 
