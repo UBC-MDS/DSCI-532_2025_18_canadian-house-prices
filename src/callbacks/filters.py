@@ -4,6 +4,7 @@ from src.utils.data_loader import load_data
 df = load_data()
 
 def register_callbacks(app):
+    # Callback for updating city options based on selected provinces
     @app.callback(
         Output("city-filter", "options"),
         Input("province-filter", "value")
@@ -16,6 +17,7 @@ def register_callbacks(app):
             city_options = [{"label": city, "value": city} for city in df["City"].unique()]
         return city_options
 
+    # Callback to reset the filters to default values
     @app.callback(
         [Output("city-filter", "value"),
          Output("province-filter", "value"),
@@ -27,7 +29,9 @@ def register_callbacks(app):
     def reset_filters(n_clicks):
         return (
             ["Vancouver", "Toronto", "Montreal", "Ottawa"],
-            [],
+            [],  # Province filter is reset to empty (or default values if you prefer)
             [df["Number_Beds"].min(), df["Number_Beds"].max()],
             [df["Number_Baths"].min(), df["Number_Baths"].max()]
         )
+
+   

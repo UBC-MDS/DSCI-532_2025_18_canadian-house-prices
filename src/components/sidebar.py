@@ -4,6 +4,21 @@ from dash import html, dcc
 def create_sidebar(df):
     return dbc.Col([
         html.H3("Filters", className="mb-4", style={"color": "#FFFFFF"}),
+        
+        # Province Multi-Select Dropdown (Top)
+        dbc.Row([
+            html.H5("Province", className="mb-4", style={"color": "#FFFFFF"}),
+            dcc.Dropdown(
+                id="province-filter",
+                options=[{"label": province, "value": province} for province in df["Province"].unique()],
+                multi=True,
+                placeholder="Select Province"
+            )
+        ], className="mb-4"),
+        
+        # Add a break between Province and City
+        html.Br(),
+        
         # City Dropdown Menu
         dbc.Row([
             html.H5("City", className="mb-4", style={"color": "#FFFFFF"}),
@@ -15,16 +30,10 @@ def create_sidebar(df):
                 value=["Vancouver", "Toronto", "Montreal", "Ottawa"]
             )
         ], className="mb-4"),
-        # Province Multi-Select Dropdown
-        dbc.Row([
-            html.H5("Province", className="mb-4", style={"color": "#FFFFFF"}),
-            dcc.Dropdown(
-                id="province-filter",
-                options=[{"label": province, "value": province} for province in df["Province"].unique()],
-                multi=True,
-                placeholder="Select Province"
-            )
-        ], className="mb-4"),
+        
+        # Add a break between City and other filters
+        html.Br(),
+        
         # Bedrooms Range Slider
         dbc.Row([
             html.H5("Bedrooms", className="mb-4", style={"color": "#FFFFFF"}),
@@ -38,6 +47,7 @@ def create_sidebar(df):
                 value=[df["Number_Beds"].min(), df["Number_Beds"].max()]
             )
         ], className="mb-4"),
+        
         # Bathrooms Range Slider
         dbc.Row([
             html.H5("Bathrooms", className="mb-4", style={"color": "#FFFFFF"}),
@@ -51,6 +61,7 @@ def create_sidebar(df):
                 value=[df["Number_Baths"].min(), df["Number_Baths"].max()]
             )
         ], className="mb-4"),
+        
         # Reset Filters Button
         dbc.Row([
             dbc.Col(
