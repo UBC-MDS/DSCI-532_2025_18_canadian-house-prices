@@ -6,6 +6,7 @@ from src.components.charts import create_map_card, create_chart1_card, create_ch
 
 def create_layout(df):
     return dbc.Container(fluid=True, children=[
+        # Header Row with title
         dbc.Row([
             dbc.Col(
                 html.H2("Canadian House Prices Dashboard", style={"color": "#FFFFFF", "text-align": "left"}),
@@ -16,15 +17,18 @@ def create_layout(df):
             "padding": "10px",
             "box-shadow": "0 2px 5px 0 rgba(0,0,0,0.2)"
         }),
+
+        # Main Content Row with sidebar and content area
         dbc.Row([
-            create_sidebar(df),
-            dbc.Col([
-                create_summary_cards(),
-                dbc.Row([
+            create_sidebar(df),  # The sidebar with the reordered filters
+            dbc.Col([  # Content Area
+                create_summary_cards(),  # The summary cards
+                dbc.Row([  # First set of charts/cards
                     dbc.Col(create_map_card(), width=6, className="h-100"),
                     dbc.Col(create_chart1_card(), width=6, className="h-100")
                 ], className="gx-2 mb-4", style={"height": "500px"}),
-                dbc.Row([
+
+                dbc.Row([  # Second set of charts/cards
                     dbc.Col(create_chart3_card(), width=6, className="h-100"),
                     dbc.Col(create_chart2_card(), width=6, className="h-100")
                 ], className="gx-2 mb-4", style={"height": "500px"})
