@@ -30,6 +30,10 @@ The dataset provided consists of the following key variables:
 - **Longitude/Latitude:** Geographical coordinates of the city.
 - **Median_Family_Income:** The median household income of the city’s residents.
 
+## Data Size:
+Number of entries (rows): The dataset consists of 35768 rows.
+Number of variables (columns): The dataset contains 10 columns .
+
 ## Research Questions:
 By comparing market trends and price fluctuations, Joel aims to pinpoint areas with the highest potential for price appreciation, making them ideal for real estate investment. The key research questions Joel seeks to address include:
 
@@ -41,6 +45,11 @@ By comparing market trends and price fluctuations, Joel aims to pinpoint areas w
 6. **Price Distribution:** What is the price distribution like within each city?
 
 These insights will allow Joel to better understand the market dynamics, enabling him to make informed decisions about where to invest.
+
+## New Variables for Derivation/Engineering:
+One potential new variable we can derive is Price per Bedroom. This could help us analyze how the number of bedrooms correlates with the price of properties across different cities. This metric could provide insights into how much buyers are paying for each additional bedroom in a city and whether cities with more bedrooms on average are associated with higher or lower prices.
+
+If the price per bedroom is not sufficient, we would have liked to have the property type (e.g., condo, townhouse, single-family home, etc.), as the type of property often correlates with price and can provide more specific insights into the market.
 
 ## App Sketch and Description:
 
