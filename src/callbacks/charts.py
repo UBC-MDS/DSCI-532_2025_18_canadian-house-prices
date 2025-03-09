@@ -121,35 +121,62 @@ def register_callbacks(app):
             margin=dict(l=10, r=10, t=50, b=10)
         )
 
-        # Chart 3: Median Price Across Cities (Bar Chart)
-        city_median_price = filtered_df.groupby("City")["Price"].median().sort_values()
-        median_price_comparison = go.Figure(
-            data=[go.Bar(
-                x=city_median_price.index,
-                y=city_median_price.values,
-                marker=dict(color="#1E88E5")
-            )],
-            layout=go.Layout(
+        # Chart 3: Bubble Chart - Median House Price to Income Ratio by City
+        if not filtered_df.empty:
+            # Aggregate data by city to get median values
+            city_data = filtered_df.groupby("City").agg({
+                "Price": "median",            # Median house price
+                "Median_Family_Income": "median",  # Median family income
+                "Population": "first",         # Population (assuming consistent per city)
+                "Province": "first"
+            }).reset_index()
+
+            # Calculate the price-to-income ratio
+            city_data["Price_Income_Ratio"] = city_data["Price"] / city_data["Median_Family_Income"]
+
+            # Create the bubble chart
+            bubble_chart = px.scatter(
+                city_data,
+                x="City",
+                y="Price_Income_Ratio",
+                size="Population",
+                color="Province",
+                hover_name="City",
+                hover_data={"Population": True, "Price_Income_Ratio": ":.2f"},
+                title="Median House Price to Family Income Ratio by City",
+                template="plotly_white"
+            )
+
+            # Update layout for better appearance
+            bubble_chart.update_layout(
+                xaxis_title="City",
+                yaxis_title="Price to Family Income Ratio",
+                xaxis_tickangle=-45,  # Rotate x-axis labels for readability
                 title=dict(
-                    text="Median Price Across Cities",
+                    text="Median House Price to Income Ratio by City",
                     font=dict(size=25, family="Roboto, sans-serif", color="#000000"),
                     x=0.5,
                     y=0.95,
                     xanchor="center",
                     yanchor="top"
                 ),
-                xaxis=dict(title="City"),
-                yaxis=dict(title="Median Price (CAD)"),
-                template="plotly_white",
-                plot_bgcolor="#F5F5F5",
-                paper_bgcolor="#FFFFFF",
                 xaxis_title_font_size=CHART_AXIS_TITLE_FONT_SIZE,
                 yaxis_title_font_size=CHART_AXIS_TITLE_FONT_SIZE,
                 xaxis_tickfont_size=CHART_AXIS_TICKFONT_FONT_SIZE,
                 yaxis_tickfont_size=CHART_AXIS_TICKFONT_FONT_SIZE,
+                plot_bgcolor="#F5F5F5",
+                paper_bgcolor="#FFFFFF",
                 margin=dict(l=10, r=10, t=50, b=10)
             )
-        )
+        else:
+            # If no data is available, return an empty figure
+            bubble_chart = go.Figure()
+            bubble_chart.update_layout(
+                title="Median House Price to Income Ratio by City",
+                xaxis_title="City",
+                yaxis_title="Price to Income Ratio",
+                template="plotly_white"
+            )
 
         # Define GeoJSON source for Canadian provinces
         geojson_url = "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/canada.geojson"
@@ -234,6 +261,6 @@ def register_callbacks(app):
             ]),
             city_price_distribution,
             price_vs_bedrooms,
-            median_price_comparison,
+            bubble_chart,
             final_map.to_dict()  # Output Altair chart spec with city markers
         )
