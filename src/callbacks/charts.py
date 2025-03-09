@@ -195,6 +195,7 @@ def register_callbacks(app):
 
         # Prepare data for city markers
         if selected_cities:
+            # If cities are selected, filter by those cities
             map_df = filtered_df[filtered_df["City"].isin(selected_cities)].groupby("City").agg({
                 "Latitude": "mean",
                 "Longitude": "mean",
@@ -202,7 +203,18 @@ def register_callbacks(app):
                 "Number_Beds": "mean"
             }).reset_index()
         else:
-            map_df = pd.DataFrame(columns=["City", "Latitude", "Longitude", "Price", "Number_Beds"])
+            # If no cities are selected, use all cities from the filtered DataFrame
+            map_df = filtered_df.groupby("City").agg({
+                "Latitude": "mean",
+                "Longitude": "mean",
+                "Price": "median",
+                "Number_Beds": "mean"
+            }).reset_index()
+
+        # Hardcode Halifax's coordinates (For Milestone 3 only, will look into it later)
+        if "Halifax" in map_df["City"].values:
+            map_df.loc[map_df["City"] == "Halifax", "Latitude"] = 44.6488
+            map_df.loc[map_df["City"] == "Halifax", "Longitude"] = -63.5752
 
         # Create the base Altair map (provinces)
         base_map = alt.Chart(
