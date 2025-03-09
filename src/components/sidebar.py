@@ -3,7 +3,7 @@ from dash import html, dcc
 
 def create_sidebar(df):
     return dbc.Col([
-        html.H3("Canadian House Prices Dashboard", className="mb-4", style={"color": "#FFFFFF"}),
+        html.H3("Canadian House Prices Dashboard", className="mb-4", style={"color": "#FFFFFF", "font-weight": "bold"}),
         
         # Province Multi-Select Dropdown (Top)
         dbc.Row([
@@ -74,7 +74,54 @@ def create_sidebar(df):
                 ),
                 width=12
             )
-        ], className="mb-4")
+        ], className="mb-4"),
+
+        # GitHub and About Buttons
+        dbc.Row([
+            dbc.Col(
+                dbc.Button(
+                    "GitHub",
+                    id="github-button",
+                    href="https://github.com/yourusername/your-repo",  # Replace with your repo URL
+                    target="_blank",
+                    color="secondary",
+                    style={"background-color": "#0E1731", "color": "#FFFFFF", "border-color": "#053FA8", "font-size": "20px"},
+                    className="mt-2 me-2"  # Added me-2 for right margin
+                ),
+                width="auto"  # Use width="auto" to fit content
+            ),
+            dbc.Col(
+                dbc.Button(
+                    "About",
+                    id="about-button",
+                    color="secondary",
+                    style={"background-color": "#0E1731", "color": "#FFFFFF", "border-color": "#053FA8", "font-size": "20px"},
+                    className="mt-2"
+                ),
+                width="auto"  # Use width="auto" to fit content
+            )
+        ], className="mb-4", style={"justify-content": "flex-start"}),  # Left-align the row
+        
+        # Hidden About Text (toggled by the About button)
+        html.Div(
+            id="about-text",
+            children=[
+                html.P(
+                    "This project was done by Fazeeia Mohammed, Colombe Tolokin, Dominic Lam, and HUI Tang.",
+                    style={"color": "#FFFFFF", "font-size": "20px"}
+                ),
+                html.P(
+                    "The aim is to provide information on the pricing of houses as the location changes across Canada.",
+                    style={"color": "#FFFFFF", "font-size": "20px"}
+                ),
+                html.P(
+                    "Last Deployment Date: March 09, 2025",
+                    style={"color": "#FFFFFF", "font-size": "20px"}
+                )
+            ],
+            style={"display": "none"}  # Initially hidden
+        )
+        
     ], width=2, style={
         "background-color": "#053FA8",
         "padding": "20px",
