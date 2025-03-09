@@ -3,7 +3,7 @@ from dash import html, dcc
 
 def create_sidebar(df):
     return dbc.Col([
-        html.H3("Filters", className="mb-4", style={"color": "#FFFFFF"}),
+        html.H3("Canadian House Prices Dashboard", className="mb-4", style={"color": "#FFFFFF"}),
         
         # Province Multi-Select Dropdown (Top)
         dbc.Row([
