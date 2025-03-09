@@ -144,8 +144,11 @@ def register_callbacks(app):
                 hover_name="City",
                 hover_data={"Population": True, "Price_Income_Ratio": ":.2f"},
                 title="Median House Price to Family Income Ratio by City",
-                template="plotly_white"
+                template="plotly_white",
+                size_max = 60
             )
+
+            bubble_chart.update_traces(marker=dict(sizemin=15))
 
             # Update layout for better appearance
             bubble_chart.update_layout(
