@@ -1,4 +1,4 @@
-from dash import Output, Input
+from dash import Output, Input, State
 from src.utils.data_loader import load_data
 
 df = load_data()
@@ -34,4 +34,17 @@ def register_callbacks(app):
             [df["Number_Baths"].min(), df["Number_Baths"].max()]
         )
 
-   
+    # Callback to toggle About text visibility
+    @app.callback(
+        Output("about-text", "style"),
+        Input("about-button", "n_clicks"),
+        State("about-text", "style"),
+        prevent_initial_call=True  # Prevents callback from firing on page load
+    )
+    def toggle_about_text(n_clicks, current_style):
+        if n_clicks is None:
+            return {"display": "none"}
+        if current_style["display"] == "none":
+            return {"display": "block"}  # Show the text
+        return {"display": "none"}  # Hide the text again
+       

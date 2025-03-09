@@ -48,7 +48,7 @@ The dashboard allows users to:
     ```
 3. **Run the Application**:
 	```bash
-	python -m src/app.py
+	python -m src.app
     ```
 
 4. **View the Dashboard**:

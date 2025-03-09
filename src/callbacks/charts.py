@@ -3,14 +3,23 @@ from dash import html
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import altair as alt
 from src.utils.data_loader import load_data
 
+# Load the dataset
 df = load_data()
 
+# Define constants for chart styling
 CHART_AXIS_TITLE_FONT_SIZE = 18
 CHART_AXIS_TICKFONT_FONT_SIZE = 16
 
 def register_callbacks(app):
+    """
+    Register callbacks with the Dash application to update the dashboard components.
+    
+    Args:
+        app: The Dash application instance.
+    """
     @app.callback(
         [Output("median-price", "children"),
          Output("avg-bedrooms", "children"),
@@ -18,16 +27,30 @@ def register_callbacks(app):
          Output("chart1", "figure"),
          Output("chart2", "figure"),
          Output("chart3", "figure"),
-         Output("map", "figure")],
+         Output("map", "spec")],  # Changed to "spec" for Altair
         [Input("city-filter", "value"),
          Input("province-filter", "value"),
          Input("bedrooms-slider", "value"),
          Input("bathrooms-slider", "value")]
     )
-    def update_dashboard(selected_cities, selected_provinces, bedrooms_range, bathrooms_range):
-        # Apply filtering logic based on user inputs
-        filtered_df = df.copy()
 
+    def update_dashboard(selected_cities, selected_provinces, bedrooms_range, bathrooms_range):
+        """
+        Update the dashboard components based on user inputs.
+        
+        Args:
+            selected_cities (list): List of selected city names.
+            selected_provinces (list): List of selected province names.
+            bedrooms_range (list): Range of bedrooms [min, max].
+            bathrooms_range (list): Range of bathrooms [min, max].
+        
+        Returns:
+            tuple: Updated content for summary cards and chart figures.
+        """
+        # Filter the dataset based on user inputs
+
+        filtered_df = df.copy()
+        
         if selected_cities:
             filtered_df = filtered_df[filtered_df["City"].isin(selected_cities)]
         if selected_provinces:
@@ -45,7 +68,7 @@ def register_callbacks(app):
         min_price = filtered_df["Price"].min()
         max_price = filtered_df["Price"].max()
 
-        # City Price Distribution (Box Plot)
+        # Chart 1: City Price Distribution (Box Plot)
         city_price_distribution = px.box(
             filtered_df,
             x="City",
@@ -71,7 +94,7 @@ def register_callbacks(app):
             margin=dict(l=10, r=10, t=50, b=10)
         )
 
-        # Price vs Number of Bedrooms (Box Plot)
+        # Chart 2: Price vs Number of Bedrooms (Box Plot)
         price_vs_bedrooms = px.box(
             filtered_df,
             x="Number_Beds",
@@ -98,110 +121,150 @@ def register_callbacks(app):
             margin=dict(l=10, r=10, t=50, b=10)
         )
 
-        # Median Price Across Cities (Bar Chart)
-        city_median_price = filtered_df.groupby("City")["Price"].median().sort_values()
-        median_price_comparison = go.Figure(
-            data=[go.Bar(
-                x=city_median_price.index,
-                y=city_median_price.values,
-                marker=dict(color="#1E88E5")
-            )],
-            layout=go.Layout(
+        # Chart 3: Bubble Chart - Median House Price to Income Ratio by City
+        if not filtered_df.empty:
+            # Aggregate data by city to get median values
+            city_data = filtered_df.groupby("City").agg({
+                "Price": "median",            # Median house price
+                "Median_Family_Income": "median",  # Median family income
+                "Population": "first",         # Population (assuming consistent per city)
+                "Province": "first"
+            }).reset_index()
+
+            # Calculate the price-to-income ratio
+            city_data["Price_Income_Ratio"] = city_data["Price"] / city_data["Median_Family_Income"]
+
+            # Create the bubble chart
+            bubble_chart = px.scatter(
+                city_data,
+                x="City",
+                y="Price_Income_Ratio",
+                size="Population",
+                color="Province",
+                hover_name="City",
+                hover_data={"Population": True, "Price_Income_Ratio": ":.2f"},
+                title="Median House Price to Family Income Ratio by City",
+                template="plotly_white",
+                size_max = 60
+            )
+
+            bubble_chart.update_traces(marker=dict(sizemin=15))
+
+            # Update layout for better appearance
+            bubble_chart.update_layout(
+                xaxis_title="City",
+                yaxis_title="Price to Family Income Ratio",
+                xaxis_tickangle=-45,  # Rotate x-axis labels for readability
                 title=dict(
-                    text="Median Price Across Cities",
+                    text="Median House Price to Income Ratio by City",
                     font=dict(size=25, family="Roboto, sans-serif", color="#000000"),
                     x=0.5,
                     y=0.95,
                     xanchor="center",
                     yanchor="top"
                 ),
-                xaxis=dict(title="City"),
-                yaxis=dict(title="Median Price (CAD)"),
-                template="plotly_white",
-                plot_bgcolor="#F5F5F5",
-                paper_bgcolor="#FFFFFF",
                 xaxis_title_font_size=CHART_AXIS_TITLE_FONT_SIZE,
                 yaxis_title_font_size=CHART_AXIS_TITLE_FONT_SIZE,
                 xaxis_tickfont_size=CHART_AXIS_TICKFONT_FONT_SIZE,
                 yaxis_tickfont_size=CHART_AXIS_TICKFONT_FONT_SIZE,
+                plot_bgcolor="#F5F5F5",
+                paper_bgcolor="#FFFFFF",
                 margin=dict(l=10, r=10, t=50, b=10)
             )
-        )
+        else:
+            # If no data is available, return an empty figure
+            bubble_chart = go.Figure()
+            bubble_chart.update_layout(
+                title="Median House Price to Income Ratio by City",
+                xaxis_title="City",
+                yaxis_title="Price to Income Ratio",
+                template="plotly_white"
+            )
 
-        # Geospatial Price Distribution (Interactive Map)
-        if selected_cities:
-            map_df = filtered_df[filtered_df["City"].isin(selected_cities)].groupby("City").agg({
+        # Define GeoJSON source for Canadian provinces
+        geojson_url = "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/canada.geojson"
+
+        # Prepare data for Wikipedia links
+        wikipedia_data = pd.DataFrame({
+            "name": filtered_df["Province"].unique() if selected_provinces else df["Province"].unique(),
+            "wikipedia": [
+                f"https://en.wikipedia.org/wiki/{prov.replace(' ', '_')}" for prov in 
+                (filtered_df["Province"].unique() if selected_provinces else df["Province"].unique())
+            ]
+        })
+
+        map_df = filtered_df.groupby("City").agg({
                 "Latitude": "mean",
                 "Longitude": "mean",
                 "Price": "median",
                 "Number_Beds": "mean"
             }).reset_index()
-        else:
-            map_df = pd.DataFrame()
 
-        if not map_df.empty:
-            geospatial_price_distribution = px.scatter_mapbox(
-                map_df,
-                lat="Latitude",
-                lon="Longitude",
-                color="Price",
-                size="Price",
-                hover_name="City",
-                hover_data={"Price": ":,.0f", "Number_Beds": ":,.0f"},
-                title="Geospatial Price Distribution",
-                mapbox_style="carto-positron",
-                center={"lat": 55.0, "lon": -95.0},
-                zoom=2,
-            )
-        else:
-            geospatial_price_distribution = go.Figure(go.Scattermapbox())
-            geospatial_price_distribution.update_layout(
-                mapbox_style="carto-positron",
-                mapbox_center={"lat": 55.0, "lon": -95.0},
-                mapbox_zoom=2,
-                title="Geospatial Price Distribution",
-                title_x=0.5
-            )
+        # Hardcode Halifax's coordinates (For Milestone 3 only, will look into it later)
+        if "Halifax" in map_df["City"].values:
+            map_df.loc[map_df["City"] == "Halifax", "Latitude"] = 44.6488
+            map_df.loc[map_df["City"] == "Halifax", "Longitude"] = -63.5752
 
-        geospatial_price_distribution.update_layout(
-            title=dict(
-                text="Geospatial Price Distribution",
-                font=dict(size=25, family="Roboto, sans-serif", color="#000000"),
-                x=0.5,
-                y=0.95,
-                xanchor="center",
-                yanchor="top"
-            ),
-            plot_bgcolor="#F5F5F5",
-            paper_bgcolor="#FFFFFF",
-            margin=dict(l=10, r=10, t=50, b=10),
-            mapbox={
-                "layers": [{
-                    "sourcetype": "geojson",
-                    "source": "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/canada.geojson",
-                    "type": "line",
-                    "color": "pink",
-                    "line": {"width": 1}
-                }]
-            }
+        # Create the base Altair map (provinces)
+        base_map = alt.Chart(
+            alt.Data(url=geojson_url, format=alt.DataFormat(property='features'))
+        ).mark_geoshape(
+            stroke='white'
+        ).project(
+            'transverseMercator',
+            rotate=[90, 0, 0]
+        ).encode(
+            tooltip=alt.Tooltip('properties.name:N', title="Province"),
+            color=alt.Color('properties.name:N', scale=alt.Scale(scheme='tableau20'), legend=None),
+            href='wikipedia:N'
+        ).transform_lookup(
+            lookup='properties.name',
+            from_=alt.LookupData(wikipedia_data, 'name', ['wikipedia'])
         )
 
-        # Return all outputs
+        # Create city markers layer
+        city_markers = alt.Chart(map_df).mark_circle(
+            # size=120,
+        ).encode(
+            longitude='Longitude:Q',
+            latitude='Latitude:Q',
+            color=alt.Color('Price:Q', scale=alt.Scale(scheme='viridis')),
+            size=alt.Size('Price:Q', scale=alt.Scale(range=[50, 500])),
+            tooltip=[
+                alt.Tooltip('City:N', title="City"),
+                alt.Tooltip('Price:Q', title="Median Price", format=",.0f"),
+                alt.Tooltip('Number_Beds:Q', title="Average Bedrooms", format=".2f")
+            ]
+        )
+
+        # Combine base map and city markers
+        final_map = (base_map + city_markers).properties(
+            width="container",
+            height="container",
+            title="Map of Canadian Provinces with Selected Cities"
+        ).configure_title(
+            fontSize=25,
+            font='Roboto, sans-serif',
+            color="#000000",
+            anchor='middle'
+        )
+
+        # Return updated content for summary cards and chart figures
         return (
             html.Div([
-                html.H5("Median Price", style={"margin": "0", "color": "#FFFFFF"}),  # WHITE title
+                html.H5("Median Price", style={"margin": "0", "color": "#FFFFFF"}),
                 html.H3(f"${median_price:,.0f}", style={"margin": "0", "color": "#1E88E5"})
             ]),
             html.Div([
-                html.H5("Average Bedrooms", style={"margin": "0", "color": "#FFFFFF"}), # WHITE title
+                html.H5("Average Bedrooms", style={"margin": "0", "color": "#FFFFFF"}),
                 html.H3(f"{avg_bedrooms:.2f}", style={"margin": "0", "color": "#1E88E5"})
             ]),
             html.Div([
-                html.H5("Price Range", style={"margin": "0", "color": "#FFFFFF"}), # WHITE title
+                html.H5("Price Range", style={"margin": "0", "color": "#FFFFFF"}),
                 html.H3(f"${min_price:,.0f} - ${max_price:,.0f}", style={"margin": "0", "color": "#1E88E5"})
             ]),
             city_price_distribution,
             price_vs_bedrooms,
-            median_price_comparison,
-            geospatial_price_distribution
+            bubble_chart,
+            final_map.to_dict()  # Output Altair chart spec with city markers
         )
