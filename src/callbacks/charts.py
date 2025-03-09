@@ -193,18 +193,7 @@ def register_callbacks(app):
             ]
         })
 
-        # Prepare data for city markers
-        if selected_cities:
-            # If cities are selected, filter by those cities
-            map_df = filtered_df[filtered_df["City"].isin(selected_cities)].groupby("City").agg({
-                "Latitude": "mean",
-                "Longitude": "mean",
-                "Price": "median",
-                "Number_Beds": "mean"
-            }).reset_index()
-        else:
-            # If no cities are selected, use all cities from the filtered DataFrame
-            map_df = filtered_df.groupby("City").agg({
+        map_df = filtered_df.groupby("City").agg({
                 "Latitude": "mean",
                 "Longitude": "mean",
                 "Price": "median",
