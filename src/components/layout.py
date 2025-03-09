@@ -7,17 +7,17 @@ from src.components.charts import create_map_card, create_chart1_card, create_ch
 
 def create_layout(df):
     return dbc.Container(fluid=True, children=[
-        # Header Row with title
-        dbc.Row([
-            dbc.Col(
-                html.H2("Canadian House Prices Dashboard", style={"color": "#FFFFFF", "text-align": "left"}),
-                width=8
-            )
-        ], style={
-            "background-color": "#0E1731",
-            "padding": "10px",
-            "box-shadow": "0 2px 5px 0 rgba(0,0,0,0.2)"
-        }),
+        # # Header Row with title
+        # dbc.Row([
+        #     dbc.Col(
+        #         html.H2("Canadian House Prices Dashboard", style={"color": "#FFFFFF", "text-align": "left"}),
+        #         width=8
+        #     )
+        # ], style={
+        #     "background-color": "#0E1731",
+        #     "padding": "10px",
+        #     "box-shadow": "0 2px 5px 0 rgba(0,0,0,0.2)"
+        # }),
 
         # Main Content Row with sidebar and content area
         dbc.Row([
