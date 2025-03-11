@@ -23,6 +23,7 @@ def register_callbacks(app):
     @app.callback(
         [Output("median-price", "children"),
          Output("avg-bedrooms", "children"),
+         Output("avg-bathrooms", "children"),
          Output("price-range", "children"),
          Output("chart1", "figure"),
          Output("chart2", "figure"),
@@ -65,6 +66,7 @@ def register_callbacks(app):
         # Calculate summary statistics
         median_price = filtered_df["Price"].median()
         avg_bedrooms = filtered_df["Number_Beds"].mean()
+        avg_bathrooms = filtered_df["Number_Baths"].mean()
         min_price = filtered_df["Price"].min()
         max_price = filtered_df["Price"].max()
 
@@ -258,6 +260,10 @@ def register_callbacks(app):
             html.Div([
                 html.H5("Average Bedrooms", style={"margin": "0", "color": "#FFFFFF"}),
                 html.H3(f"{avg_bedrooms:.2f}", style={"margin": "0", "color": "#1E88E5"})
+            ]),
+            html.Div([ 
+                html.H5("Average Bathrooms", style={"margin": "0", "color": "#FFFFFF"}),
+                html.H3(f"{avg_bathrooms:.2f}", style={"margin": "0", "color": "#1E88E5"})
             ]),
             html.Div([
                 html.H5("Price Range", style={"margin": "0", "color": "#FFFFFF"}),

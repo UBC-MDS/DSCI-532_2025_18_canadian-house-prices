@@ -122,8 +122,11 @@ def create_sidebar(df):
             style={"display": "none"}  # Initially hidden
         )
         
-    ], width=2, style={
-        "background-color": "#053FA8",
-        "padding": "20px",
-        "box-shadow": "2px 0 5px 0 rgba(0,0,0,0.2)"
-    })
+    ], width=2, 
+       className = "sidebar"
+        # style={
+        # "background-color": "#053FA8",
+        # "padding": "20px",
+        # "box-shadow": "2px 0 5px 0 rgba(0,0,0,0.2)"
+        # }
+    )
