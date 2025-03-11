@@ -71,13 +71,38 @@ def register_callbacks(app):
         max_price = filtered_df["Price"].max()
 
         # Chart 1: City Price Distribution (Box Plot)
-        city_price_distribution = px.box(
-            filtered_df,
-            x="City",
-            y="Price",
-            title="City Price Distribution",
-            template="plotly_white"
-        )
+        # city_price_distribution = px.box(
+        #     filtered_df,
+        #     x="City",
+        #     y="Price",
+        #     title="City Price Distribution",
+        #     template="plotly_white"
+        # )
+
+        if not filtered_df.empty:
+            # Calculate median price per city
+            city_medians = filtered_df.groupby("City")["Price"].median().sort_values()
+            sorted_cities = city_medians.index.tolist()
+
+            # Create the boxplot with sorted cities
+            city_price_distribution = px.box(
+                filtered_df,
+                x="City",
+                y="Price",
+                title="City Price Distribution (Sorted by Median Price)",
+                category_orders={"City": sorted_cities},  # Sort by median order
+                template="plotly_white"
+            )
+        else:
+            city_price_distribution = go.Figure()
+            city_price_distribution.update_layout(
+                title="City Price Distribution (Sorted by Median Price)",
+                xaxis_title="City",
+                yaxis_title="Price",
+                template="plotly_white"
+            )
+
+
         city_price_distribution.update_layout(
             title=dict(
                 text="City Price Distribution",
