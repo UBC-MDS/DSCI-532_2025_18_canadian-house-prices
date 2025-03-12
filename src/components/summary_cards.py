@@ -43,4 +43,4 @@ def create_summary_cards():
             ),
             width=SUMMARY_CARD_WIDTH
         )
-    ], className="mb-3")
+    ], className="mb-3", style={"height": "7vh"})
