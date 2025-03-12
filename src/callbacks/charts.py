@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 import altair as alt
 from src.utils.data_loader import load_data
 import requests  # For fetching GeoJSON data
+from functools import lru_cache  # Added for caching
 
 # Load the dataset once when the module is imported
 df = load_data()
@@ -16,6 +17,43 @@ CHART_AXIS_TICKFONT_FONT_SIZE = 16
 
 # Enable vegafusion for better Altair performance with large datasets
 alt.data_transformers.enable("vegafusion")
+
+# Fetch GeoJSON data
+geojson_url = "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/canada.geojson"
+try:
+    response = requests.get(geojson_url)
+    response.raise_for_status()  # Raise an error if the request fails
+    geojson_data = response.json()
+except requests.exceptions.RequestException as e:
+    print(f"Error fetching GeoJSON: {e}")
+    geojson_data = {"features": []}  # Fallback to empty data
+
+@lru_cache(maxsize=128)
+def get_filtered_data(selected_cities: tuple, selected_provinces: tuple, 
+                      bedrooms_range: tuple, bathrooms_range: tuple):
+    """
+    Filter the global DataFrame based on the provided parameters.
+
+    Args:
+        selected_cities: Tuple of selected cities.
+        selected_provinces: Tuple of selected provinces.
+        bedrooms_range: Tuple of (min, max) bedrooms.
+        bathrooms_range: Tuple of (min, max) bathrooms.
+
+    Returns:
+        Filtered DataFrame.
+    """
+    filtered_df = df.copy()
+    if selected_cities:
+        filtered_df = filtered_df[filtered_df["City"].isin(selected_cities)]
+    if selected_provinces:
+        filtered_df = filtered_df[filtered_df["Province"].isin(selected_provinces)]
+    # Always apply range filters since sliders provide default values
+    filtered_df = filtered_df[(filtered_df["Number_Beds"] >= bedrooms_range[0]) & 
+                              (filtered_df["Number_Beds"] <= bedrooms_range[1])]
+    filtered_df = filtered_df[(filtered_df["Number_Baths"] >= bathrooms_range[0]) & 
+                              (filtered_df["Number_Baths"] <= bathrooms_range[1])]
+    return filtered_df
 
 def register_callbacks(app):
     """
@@ -53,20 +91,15 @@ def register_callbacks(app):
             Tuple containing updated HTML components for summary statistics and
             chart specifications/figures.
         """
-        # Create a copy of the dataframe to filter
-        filtered_df = df.copy()
+        # Convert lists to tuples for caching
+        selected_cities_tuple = tuple(selected_cities) if selected_cities else tuple()
+        selected_provinces_tuple = tuple(selected_provinces) if selected_provinces else tuple()
+        bedrooms_range_tuple = tuple(bedrooms_range)
+        bathrooms_range_tuple = tuple(bathrooms_range)
         
-        # Apply filters based on user inputs
-        if selected_cities:
-            filtered_df = filtered_df[filtered_df["City"].isin(selected_cities)]
-        if selected_provinces:
-            filtered_df = filtered_df[filtered_df["Province"].isin(selected_provinces)]
-        if bedrooms_range:
-            filtered_df = filtered_df[(filtered_df["Number_Beds"] >= bedrooms_range[0]) & 
-                                      (filtered_df["Number_Beds"] <= bedrooms_range[1])]
-        if bathrooms_range:
-            filtered_df = filtered_df[(filtered_df["Number_Baths"] >= bathrooms_range[0]) & 
-                                      (filtered_df["Number_Baths"] <= bathrooms_range[1])]
+        # Get filtered DataFrame using the cached function
+        filtered_df = get_filtered_data(selected_cities_tuple, selected_provinces_tuple, 
+                                        bedrooms_range_tuple, bathrooms_range_tuple)
 
         # Calculate summary statistics
         median_price = filtered_df["Price"].median()
@@ -386,7 +419,6 @@ def register_callbacks(app):
             )
 
         # Map: Altair-based map of Canadian provinces with city markers
-        geojson_url = "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/canada.geojson"
         wikipedia_data = pd.DataFrame({
             "name": filtered_df["Province"].unique() if selected_provinces else df["Province"].unique(),
             "wikipedia": [
@@ -406,15 +438,6 @@ def register_callbacks(app):
         if "Halifax" in map_df["City"].values:
             map_df.loc[map_df["City"] == "Halifax", "Latitude"] = 44.6488
             map_df.loc[map_df["City"] == "Halifax", "Longitude"] = -63.5752
-
-        # Fetch GeoJSON data
-        try:
-            response = requests.get(geojson_url)
-            response.raise_for_status()  # Raise an error if the request fails
-            geojson_data = response.json()
-        except requests.exceptions.RequestException as e:
-            print(f"Error fetching GeoJSON: {e}")
-            geojson_data = {"features": []}  # Fallback to empty data
 
         base_map = alt.Chart(
             alt.Data(values=geojson_data['features'])
