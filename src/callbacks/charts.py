@@ -5,6 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import altair as alt
 from src.utils.data_loader import load_data
+import requests  # For fetching GeoJSON data
 
 # Load the dataset
 df = load_data()
@@ -13,45 +14,29 @@ df = load_data()
 CHART_AXIS_TITLE_FONT_SIZE = 18
 CHART_AXIS_TICKFONT_FONT_SIZE = 16
 
+# Enable vegafusion for better Altair performance with large datasets
+alt.data_transformers.enable("vegafusion")
+
 def register_callbacks(app):
-    """
-    Register callbacks with the Dash application to update the dashboard components.
-    
-    Args:
-        app: The Dash application instance.
-    """
     @app.callback(
         [Output("median-price", "children"),
          Output("avg-bedrooms", "children"),
          Output("avg-bathrooms", "children"),
          Output("price-range", "children"),
-         Output("chart1", "figure"),
-         Output("chart2", "figure"),
+         Output("chart1", "spec"),
+         Output("chart2", "spec"),
          Output("chart3", "figure"),
-         Output("map", "spec")],  # Changed to "spec" for Altair
+         Output("map", "spec")],
         [Input("city-filter", "value"),
          Input("province-filter", "value"),
          Input("bedrooms-slider", "value"),
          Input("bathrooms-slider", "value")]
     )
-
     def update_dashboard(selected_cities, selected_provinces, bedrooms_range, bathrooms_range):
-        """
-        Update the dashboard components based on user inputs.
-        
-        Args:
-            selected_cities (list): List of selected city names.
-            selected_provinces (list): List of selected province names.
-            bedrooms_range (list): Range of bedrooms [min, max].
-            bathrooms_range (list): Range of bathrooms [min, max].
-        
-        Returns:
-            tuple: Updated content for summary cards and chart figures.
-        """
-        # Filter the dataset based on user inputs
-
+        # Create a copy of the dataframe to filter
         filtered_df = df.copy()
         
+        # Apply filters based on user inputs
         if selected_cities:
             filtered_df = filtered_df[filtered_df["City"].isin(selected_cities)]
         if selected_provinces:
@@ -70,98 +55,254 @@ def register_callbacks(app):
         min_price = filtered_df["Price"].min()
         max_price = filtered_df["Price"].max()
 
-        # Chart 1: City Price Distribution (Box Plot)
-        # city_price_distribution = px.box(
-        #     filtered_df,
-        #     x="City",
-        #     y="Price",
-        #     title="City Price Distribution",
-        #     template="plotly_white"
-        # )
+        # Function to compute boxplot statistics for a given group
+        def compute_boxplot_stats(group_df, group_col):
+            stats = group_df.groupby(group_col)["Price"].describe().reset_index()
+            stats = stats.rename(columns={'25%': 'Q1', '50%': 'median', '75%': 'Q3'})
+            stats['IQR'] = stats['Q3'] - stats['Q1']
+            stats['whisker_low_limit'] = stats['Q1'] - 1.5 * stats['IQR']
+            stats['whisker_high_limit'] = stats['Q3'] + 1.5 * stats['IQR']
 
+            # Compute actual whisker ends (Min and Max within whiskers)
+            def get_whiskers(group):
+                q1 = group['Price'].quantile(0.25)
+                q3 = group['Price'].quantile(0.75)
+                iqr = q3 - q1
+                whisker_low_limit = q1 - 1.5 * iqr
+                whisker_high_limit = q3 + 1.5 * iqr
+                whisker_low = group['Price'][group['Price'] >= whisker_low_limit].min()
+                whisker_high = group['Price'][group['Price'] <= whisker_high_limit].max()
+                return pd.Series({'Min': whisker_low, 'Max': whisker_high})
+
+            whiskers = group_df.groupby(group_col).apply(get_whiskers).reset_index()
+            stats = stats.merge(whiskers, on=group_col)
+
+            # Identify outliers in the original data
+            stats_subset = stats[[group_col, 'Min', 'Max']]
+            group_df = group_df.merge(stats_subset, on=group_col, how="left")
+            group_df['is_outlier'] = (group_df['Price'] < group_df['Min']) | (group_df['Price'] > group_df['Max'])
+            return stats, group_df
+
+        # Chart 1: City Price Distribution (Altair Boxplot)
         if not filtered_df.empty:
-            # Calculate median price per city
+            stats_city, outliers_city = compute_boxplot_stats(filtered_df, "City")
+
+            # Compute the sorted order based on median price
             city_medians = filtered_df.groupby("City")["Price"].median().sort_values()
             sorted_cities = city_medians.index.tolist()
 
-            # Create the boxplot with sorted cities
-            city_price_distribution = px.box(
-                filtered_df,
-                x="City",
-                y="Price",
-                title="City Price Distribution (Sorted by Median Price)",
-                category_orders={"City": sorted_cities},  # Sort by median order
-                template="plotly_white"
+            # Define the x-encoding with sorting by median price
+            x_encoding_city = alt.X("City:N", scale=alt.Scale(paddingInner=0.5), title="City", sort=sorted_cities)
+
+            # Boxes (Q1 to Q3)
+            box_city = alt.Chart(stats_city).mark_bar().encode(
+                x=x_encoding_city,
+                y=alt.Y("Q1:Q", title="Price"),
+                y2="Q3:Q",
+                color="City:N",
+                tooltip=[
+                    alt.Tooltip("City:N", title="City"),
+                    alt.Tooltip("Max:Q", title="Max", format="$,.0f"),
+                    alt.Tooltip("Q3:Q", title="Q3", format="$,.0f"),
+                    alt.Tooltip("median:Q", title="Median", format="$,.0f"),
+                    alt.Tooltip("Q1:Q", title="Q1", format="$,.0f"),
+                    alt.Tooltip("Min:Q", title="Min", format="$,.0f")
+                ]
             )
+
+            # Median line
+            median_city = alt.Chart(stats_city).mark_tick(color="white", size=20).encode(
+                x=x_encoding_city,
+                y="median:Q",
+                tooltip=[
+                    alt.Tooltip("City:N", title="City"),
+                    alt.Tooltip("Max:Q", title="Max", format="$,.0f"),
+                    alt.Tooltip("Q3:Q", title="Q3", format="$,.0f"),
+                    alt.Tooltip("median:Q", title="Median", format="$,.0f"),
+                    alt.Tooltip("Q1:Q", title="Q1", format="$,.0f"),
+                    alt.Tooltip("Min:Q", title="Min", format="$,.0f")
+                ]
+            )
+
+            # Whiskers (low and high)
+            whiskers_city = (
+                alt.Chart(stats_city).mark_rule().encode(
+                    x=x_encoding_city,
+                    y="Min:Q",
+                    y2="Q1:Q",
+                    color="City:N",
+                    tooltip=[
+                        alt.Tooltip("City:N", title="City"),
+                        alt.Tooltip("Min:Q", title="Min", format="$,.0f")
+                    ]
+                ) + alt.Chart(stats_city).mark_rule().encode(
+                    x=x_encoding_city,
+                    y="Q3:Q",
+                    y2="Max:Q",
+                    color="City:N",
+                    tooltip=[
+                        alt.Tooltip("City:N", title="City"),
+                        alt.Tooltip("Max:Q", title="Max", format="$,.0f")
+                    ]
+                )
+            )
+
+            # Outliers
+            outliers_plot_city = alt.Chart(outliers_city[outliers_city["is_outlier"]]).mark_point().encode(
+                x=x_encoding_city,
+                y="Price:Q",
+                color="City:N",
+                tooltip=[
+                    alt.Tooltip("City:N", title="City"),
+                    alt.Tooltip("Price:Q", title="Price", format="$,.0f")
+                ]
+            )
+
+            # Combine all layers for Chart 1
+            chart1 = (whiskers_city + box_city + median_city + outliers_plot_city).properties(
+                width="container",
+                height="container",
+                title="City Price Distribution (Sorted by Median Price)"
+            ).configure_title(
+                fontSize=25,
+                font="Roboto, sans-serif",
+                color="#000000",
+                anchor="middle"
+            ).configure_axis(
+                labelFontSize=CHART_AXIS_TICKFONT_FONT_SIZE,
+                titleFontSize=CHART_AXIS_TITLE_FONT_SIZE
+            ).configure_view(
+                strokeWidth=0
+            )
+            chart1_spec = chart1.to_dict(format="vega")
+            chart1_spec["autosize"] = {"type": "fit", "contains": "padding"}
         else:
-            city_price_distribution = go.Figure()
-            city_price_distribution.update_layout(
+            chart1_spec = alt.Chart(pd.DataFrame()).mark_text().encode(
+                text=alt.value("No Data Available")
+            ).properties(
                 title="City Price Distribution (Sorted by Median Price)",
-                xaxis_title="City",
-                yaxis_title="Price",
-                template="plotly_white"
+                width=600,
+                height=400
+            ).configure_title(
+                fontSize=25,
+                font="Roboto, sans-serif",
+                color="#000000",
+                anchor="middle"
+            ).to_dict()
+
+        # Chart 2: Price vs Number of Bedrooms (Altair Boxplot)
+        if not filtered_df.empty:
+            stats_bedrooms, outliers_bedrooms = compute_boxplot_stats(filtered_df, "Number_Beds")
+
+            # Define the x-encoding with increased padding to narrow the boxes
+            x_encoding_bedrooms = alt.X("Number_Beds:N", scale=alt.Scale(paddingInner=0.5), title="Number of Bedrooms")
+
+            # Boxes (Q1 to Q3)
+            box_bedrooms = alt.Chart(stats_bedrooms).mark_bar().encode(
+                x=x_encoding_bedrooms,
+                y=alt.Y("Q1:Q", title="Price"),
+                y2="Q3:Q",
+                color="Number_Beds:N",
+                tooltip=[
+                    alt.Tooltip("Number_Beds:N", title="Number of Bedrooms"),
+                    alt.Tooltip("Max:Q", title="Max", format="$,.0f"),
+                    alt.Tooltip("Q3:Q", title="Q3", format="$,.0f"),
+                    alt.Tooltip("median:Q", title="Median", format="$,.0f"),
+                    alt.Tooltip("Q1:Q", title="Q1", format="$,.0f"),
+                    alt.Tooltip("Min:Q", title="Min", format="$,.0f")
+                ]
             )
 
+            # Median line
+            median_bedrooms = alt.Chart(stats_bedrooms).mark_tick(color="white", size=20).encode(
+                x=x_encoding_bedrooms,
+                y="median:Q",
+                tooltip=[
+                    alt.Tooltip("Number_Beds:N", title="Number of Bedrooms"),
+                    alt.Tooltip("Max:Q", title="Max", format="$,.0f"),
+                    alt.Tooltip("Q3:Q", title="Q3", format="$,.0f"),
+                    alt.Tooltip("median:Q", title="Median", format="$,.0f"),
+                    alt.Tooltip("Q1:Q", title="Q1", format="$,.0f"),
+                    alt.Tooltip("Min:Q", title="Min", format="$,.0f")
+                ]
+            )
 
-        city_price_distribution.update_layout(
-            title=dict(
-                text="City Price Distribution",
-                font=dict(size=25, family="Roboto, sans-serif", color="#000000"),
-                x=0.5,
-                y=0.95,
-                xanchor="center",
-                yanchor="top"
-            ),
-            xaxis_title_font_size=CHART_AXIS_TITLE_FONT_SIZE,
-            yaxis_title_font_size=CHART_AXIS_TITLE_FONT_SIZE,
-            xaxis_tickfont_size=CHART_AXIS_TICKFONT_FONT_SIZE,
-            yaxis_tickfont_size=CHART_AXIS_TICKFONT_FONT_SIZE,
-            plot_bgcolor="#F5F5F5",
-            paper_bgcolor="#FFFFFF",
-            margin=dict(l=10, r=10, t=50, b=10)
-        )
+            # Whiskers (low and high)
+            whiskers_bedrooms = (
+                alt.Chart(stats_bedrooms).mark_rule().encode(
+                    x=x_encoding_bedrooms,
+                    y="Min:Q",
+                    y2="Q1:Q",
+                    color="Number_Beds:N",
+                    tooltip=[
+                        alt.Tooltip("Number_Beds:N", title="Number of Bedrooms"),
+                        alt.Tooltip("Min:Q", title="Min", format="$,.0f")
+                    ]
+                ) + alt.Chart(stats_bedrooms).mark_rule().encode(
+                    x=x_encoding_bedrooms,
+                    y="Q3:Q",
+                    y2="Max:Q",
+                    color="Number_Beds:N",
+                    tooltip=[
+                        alt.Tooltip("Number_Beds:N", title="Number of Bedrooms"),
+                        alt.Tooltip("Max:Q", title="Max", format="$,.0f")
+                    ]
+                )
+            )
 
-        # Chart 2: Price vs Number of Bedrooms (Box Plot)
-        price_vs_bedrooms = px.box(
-            filtered_df,
-            x="Number_Beds",
-            y="Price",
-            title="Price vs Number of Bedrooms",
-            labels={"Number_Beds": "Number of Bedrooms"},
-            template="plotly_white"
-        )
-        price_vs_bedrooms.update_layout(
-            title=dict(
-                text="Price vs Number of Bedrooms",
-                font=dict(size=25, family="Roboto, sans-serif", color="#000000"),
-                x=0.5,
-                y=0.95,
-                xanchor="center",
-                yanchor="top"
-            ),
-            xaxis_title_font_size=CHART_AXIS_TITLE_FONT_SIZE,
-            yaxis_title_font_size=CHART_AXIS_TITLE_FONT_SIZE,
-            xaxis_tickfont_size=CHART_AXIS_TICKFONT_FONT_SIZE,
-            yaxis_tickfont_size=CHART_AXIS_TICKFONT_FONT_SIZE,
-            plot_bgcolor="#F5F5F5",
-            paper_bgcolor="#FFFFFF",
-            margin=dict(l=10, r=10, t=50, b=10)
-        )
+            # Outliers
+            outliers_plot_bedrooms = alt.Chart(outliers_bedrooms[outliers_bedrooms["is_outlier"]]).mark_point().encode(
+                x=x_encoding_bedrooms,
+                y="Price:Q",
+                color="Number_Beds:N",
+                tooltip=[
+                    alt.Tooltip("Number_Beds:N", title="Number of Bedrooms"),
+                    alt.Tooltip("Price:Q", title="Price", format="$,.0f")
+                ]
+            )
 
-        # Chart 3: Bubble Chart - Median House Price to Income Ratio by City
+            # Combine all layers for Chart 2
+            chart2 = (whiskers_bedrooms + box_bedrooms + median_bedrooms + outliers_plot_bedrooms).properties(
+                width="container",
+                height="container",
+                title="Price vs Number of Bedrooms"
+            ).configure_title(
+                fontSize=25,
+                font="Roboto, sans-serif",
+                color="#000000",
+                anchor="middle"
+            ).configure_axis(
+                labelFontSize=CHART_AXIS_TICKFONT_FONT_SIZE,
+                titleFontSize=CHART_AXIS_TITLE_FONT_SIZE
+            ).configure_view(
+                strokeWidth=0
+            )
+            chart2_spec = chart2.to_dict(format="vega")
+            chart2_spec["autosize"] = {"type": "fit", "contains": "padding"}
+        else:
+            chart2_spec = alt.Chart(pd.DataFrame()).mark_text().encode(
+                text=alt.value("No Data Available")
+            ).properties(
+                title="Price vs Number of Bedrooms",
+                width=600,
+                height=400
+            ).configure_title(
+                fontSize=25,
+                font="Roboto, sans-serif",
+                color="#000000",
+                anchor="middle"
+            ).to_dict()
+
+        # Chart 3: Bubble Chart - Median House Price to Income Ratio by City (Plotly)
         if not filtered_df.empty:
-            # Aggregate data by city to get median values
             city_data = filtered_df.groupby("City").agg({
-                "Price": "median",            # Median house price
-                "Median_Family_Income": "median",  # Median family income
-                "Population": "first",         # Population (assuming consistent per city)
+                "Price": "median",
+                "Median_Family_Income": "median",
+                "Population": "first",
                 "Province": "first"
             }).reset_index()
-
-            # Calculate the price-to-income ratio
             city_data["Price_Income_Ratio"] = city_data["Price"] / city_data["Median_Family_Income"]
 
-            # Create the bubble chart
             bubble_chart = px.scatter(
                 city_data,
                 x="City",
@@ -172,18 +313,15 @@ def register_callbacks(app):
                 hover_data={"Population": True, "Price_Income_Ratio": ":.2f"},
                 title="Median House Price to Family Income Ratio by City",
                 template="plotly_white",
-                size_max = 60
+                size_max=60
             )
-
             bubble_chart.update_traces(marker=dict(sizemin=15))
-
-            # Update layout for better appearance
             bubble_chart.update_layout(
                 xaxis_title="City",
                 yaxis_title="Price to Family Income Ratio",
-                xaxis_tickangle=-45,  # Rotate x-axis labels for readability
+                xaxis_tickangle=-45,
                 title=dict(
-                    text="Median House Price to Income Ratio by City",
+                    text="Median House Price to Family Income Ratio by City",
                     font=dict(size=25, family="Roboto, sans-serif", color="#000000"),
                     x=0.5,
                     y=0.95,
@@ -199,19 +337,16 @@ def register_callbacks(app):
                 margin=dict(l=10, r=10, t=50, b=10)
             )
         else:
-            # If no data is available, return an empty figure
             bubble_chart = go.Figure()
             bubble_chart.update_layout(
-                title="Median House Price to Income Ratio by City",
+                title="Median House Price to Family Income Ratio by City",
                 xaxis_title="City",
                 yaxis_title="Price to Income Ratio",
                 template="plotly_white"
             )
 
-        # Define GeoJSON source for Canadian provinces
+        # Map: Altair-based map of Canadian provinces with city markers
         geojson_url = "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/canada.geojson"
-
-        # Prepare data for Wikipedia links
         wikipedia_data = pd.DataFrame({
             "name": filtered_df["Province"].unique() if selected_provinces else df["Province"].unique(),
             "wikipedia": [
@@ -221,20 +356,28 @@ def register_callbacks(app):
         })
 
         map_df = filtered_df.groupby("City").agg({
-                "Latitude": "mean",
-                "Longitude": "mean",
-                "Price": "median",
-                "Number_Beds": "mean"
-            }).reset_index()
+            "Latitude": "mean",
+            "Longitude": "mean",
+            "Price": "median",
+            "Number_Beds": "mean"
+        }).reset_index()
 
-        # Hardcode Halifax's coordinates (For Milestone 3 only, will look into it later)
+        # Adjust Halifax coordinates if present
         if "Halifax" in map_df["City"].values:
             map_df.loc[map_df["City"] == "Halifax", "Latitude"] = 44.6488
             map_df.loc[map_df["City"] == "Halifax", "Longitude"] = -63.5752
 
-        # Create the base Altair map (provinces)
+        # Fetch GeoJSON data
+        try:
+            response = requests.get(geojson_url)
+            response.raise_for_status()  # Raise an error if the request fails
+            geojson_data = response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching GeoJSON: {e}")
+            geojson_data = {"features": []}  # Fallback to empty data
+
         base_map = alt.Chart(
-            alt.Data(url=geojson_url, format=alt.DataFormat(property='features'))
+            alt.Data(values=geojson_data['features'])
         ).mark_geoshape(
             stroke='white'
         ).project(
@@ -249,10 +392,7 @@ def register_callbacks(app):
             from_=alt.LookupData(wikipedia_data, 'name', ['wikipedia'])
         )
 
-        # Create city markers layer
-        city_markers = alt.Chart(map_df).mark_circle(
-            # size=120,
-        ).encode(
+        city_markers = alt.Chart(map_df).mark_circle().encode(
             longitude='Longitude:Q',
             latitude='Latitude:Q',
             color=alt.Color('Price:Q', scale=alt.Scale(scheme='viridis')),
@@ -264,7 +404,6 @@ def register_callbacks(app):
             ]
         )
 
-        # Combine base map and city markers
         final_map = (base_map + city_markers).properties(
             width="container",
             height="container",
@@ -276,7 +415,7 @@ def register_callbacks(app):
             anchor='middle'
         )
 
-        # Return updated content for summary cards and chart figures
+        # Return updated content
         return (
             html.Div([
                 html.H5("Median Price", style={"margin": "0", "color": "#FFFFFF"}),
@@ -294,8 +433,8 @@ def register_callbacks(app):
                 html.H5("Price Range", style={"margin": "0", "color": "#FFFFFF"}),
                 html.H3(f"${min_price:,.0f} - ${max_price:,.0f}", style={"margin": "0", "color": "#1E88E5"})
             ]),
-            city_price_distribution,
-            price_vs_bedrooms,
+            chart1_spec,
+            chart2_spec,
             bubble_chart,
-            final_map.to_dict()  # Output Altair chart spec with city markers
+            final_map.to_dict(format="vega")
         )

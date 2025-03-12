@@ -1,5 +1,5 @@
 import dash_bootstrap_components as dbc
-from dash import dcc
+from dash import dcc, html
 from dash_vega_components import Vega
 
 
@@ -30,8 +30,15 @@ def create_chart1_card():
     return dbc.Card([
         dcc.Loading(
             dbc.CardBody(
-            dcc.Graph(id="chart1", style={"height": "100%"}),
-                style={"height": "100%", "background-color": "#FFFFFF", "padding": "10px"}
+                [
+                    Vega(
+                        id="chart1",
+                        spec={},  # Initial empty spec, updated by callback
+                        opt={"renderer": "canvas", "actions": False},
+                        style={"width": "100%", "height": "100%"}
+                    )
+                ],
+                style={"height": "500px", "background-color": "#FFFFFF", "padding": "10px"}
             )
         )
     ], style={
@@ -45,8 +52,15 @@ def create_chart2_card():
     return dbc.Card([
         dcc.Loading(
             dbc.CardBody(
-            dcc.Graph(id="chart2", style={"height": "100%"}),
-                style={"height": "100%", "background-color": "#FFFFFF", "padding": "10px"}
+                [
+                    Vega(
+                        id="chart2",
+                        spec={},  # Initial empty spec, updated by callback
+                        opt={"renderer": "canvas", "actions": False},  # Disable Vega toolbar
+                        style={"width": "100%", "height": "100%"}
+                    )
+                ],
+                style={"height": "500px", "background-color": "#FFFFFF", "padding": "10px"}
             )
         )
     ], style={

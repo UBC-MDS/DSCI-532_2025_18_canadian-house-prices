@@ -1,18 +1,21 @@
-name: 'canadian_house_prices'
+name: canadian_house_prices
 channels:
-    - conda-forge
-    - defaults
+  - conda-forge
+  - defaults
 dependencies:
-    - python=3.12
-    - pandas=2.2
-    - altair=5.3
-    - ipykernel
-    - altair-all
-    - dash
-    - dash-bootstrap-components
-    - plotly
-    - tabulate  # df.to_markdown()
-    - lxml  # pd.read_html()
-    - pip=24.0
-    - pip:
-        - dash-vega-components
+  - python=3.12
+  - pandas=2.2
+  - altair=5.3
+  - dash
+  - dash-bootstrap-components
+  - plotly
+  - requests
+  - vegafusion=1.6.9
+  - vegafusion-python-embed=1.6.9
+  - vl-convert-python>=1.3.0
+  - pip=24.0
+  - ipykernel  # Optional, for Jupyter support
+  - tabulate  # Optional, for df.to_markdown()
+  - lxml      
+  - pip:
+      - dash-vega-components
