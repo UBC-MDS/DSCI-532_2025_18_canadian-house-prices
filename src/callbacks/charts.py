@@ -83,6 +83,7 @@ def register_callbacks(app):
             group_df['is_outlier'] = (group_df['Price'] < group_df['Min']) | (group_df['Price'] > group_df['Max'])
             return stats, group_df
 
+
         # Chart 1: City Price Distribution (Altair Boxplot)
         if not filtered_df.empty:
             stats_city, outliers_city = compute_boxplot_stats(filtered_df, "City")
@@ -325,6 +326,7 @@ def register_callbacks(app):
                     "Price-Income Ratio: %{y:.2f}<extra></extra>"
                 )
             )
+
             bubble_chart.update_layout(
                 xaxis_title="City",
                 yaxis_title="Price to Family Income Ratio",
