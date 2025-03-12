@@ -1,0 +1,127 @@
+/* Define CSS Variables for Consistent Color Scheme */
+:root {
+    --primary-blue: #053FA8;      /* Main sidebar and accent color */
+    --dark-blue: #0E1731;         /* Summary cards and button background */
+    --accent-blue: #1E88E5;       /* Highlight color for text/values */
+    --background-light: #FAFDFF;  /* Main background */
+    --white: #FFFFFF;             /* Text and card background */
+    --shadow-color: rgba(0, 0, 0, 0.2); /* Shadow effect */
+    --gray-light: #F5F5F5;        /* Chart background */
+    --black: #000000;             /* Default text color */
+}
+
+/* Global Styles */
+body {
+    background-color: var(--background-light);
+    font-family: 'Roboto', sans-serif;
+    color: var(--black);
+    margin: 0;
+    padding: 0;
+}
+
+/* Sidebar Styling */
+.sidebar {
+    background-color: var(--primary-blue);
+    padding: 20px;
+    box-shadow: 2px 0 5px 0 var(--shadow-color);
+    height: 100vh;
+    overflow-y: auto; /* Scroll if content overflows */
+    color: var(--black);
+}
+
+.sidebar h3 {
+    color: var(--white);
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.sidebar .dropdown, .sidebar .range-slider {
+    margin-bottom: 20px;
+}
+
+.sidebar .btn {
+    background-color: var(--dark-blue);
+    color: var(--white);
+    border-color: var(--primary-blue);
+    font-size: 20px;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.sidebar .btn:hover {
+    background-color: var(--accent-blue);
+    border-color: var(--accent-blue);
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+/* Card Styling */
+.card {
+    box-shadow: 0 4px 8px 0 var(--shadow-color);
+    border-radius: 10px;
+    margin: 15px;
+    height: 100%;
+    background-color: var(--white);
+}
+
+.card-body {
+    padding: 10px;
+    height: 100%;
+}
+
+/* Summary Cards */
+.summary-card {
+    background-color: var(--dark-blue);
+    padding: 10px;
+    border-radius: 10px;
+    text-align: center;
+    height: 100%;
+}
+
+.summary-card h5 {
+    color: var(--white);
+    margin: 0;
+    font-size: 16px;
+}
+
+.summary-card h3 {
+    color: var(--accent-blue);
+    margin: 0;
+    font-size: 24px;
+}
+
+/* Chart and Map Styling */
+.chart-title {
+    font-size: 25px;
+    font-family: 'Roboto', sans-serif;
+    color: var(--black);
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.map-container, .chart-container {
+    height: 500px; /* Matches layout.py height */
+    width: 100%;
+}
+
+/* Loading Spinner */
+.loading {
+    color: var(--dark-blue);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        padding: 10px;
+    }
+    .card {
+        margin: 10px 0;
+    }
+    .chart-container, .map-container {
+        height: 300px; /* Reduce height on mobile */
+    }
+    .summary-card h3 {
+        font-size: 20px;
+    }
+}
