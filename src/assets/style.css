@@ -99,7 +99,7 @@ body {
 }
 
 .map-container, .chart-container {
-    height: 500px; /* Matches layout.py height */
+    height: 100%; /* Matches layout.py height */
     width: 100%;
 }
 

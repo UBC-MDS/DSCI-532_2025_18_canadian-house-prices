@@ -2,6 +2,7 @@ import dash_bootstrap_components as dbc
 from dash import dcc, html
 from dash_vega_components import Vega
 
+CHARTS_HEIGHT= "40vh"
 
 def create_map_card():
     return dbc.Card(
@@ -16,7 +17,7 @@ def create_map_card():
                             style={"width": "100%", "height": "100%"}
                         )
                     ],
-                    style={"height": "500px"}  # Fixed height for the card body
+                    style={"height": CHARTS_HEIGHT}  # Fixed height for the card body
                 )
             )
         ], style={
@@ -38,7 +39,7 @@ def create_chart1_card():
                         style={"width": "100%", "height": "100%"}
                     )
                 ],
-                style={"height": "500px", "background-color": "#FFFFFF", "padding": "10px"}
+                style={"height": CHARTS_HEIGHT, "background-color": "#FFFFFF", "padding": "10px"}
             )
         )
     ], style={
@@ -60,7 +61,7 @@ def create_chart2_card():
                         style={"width": "100%", "height": "100%"}
                     )
                 ],
-                style={"height": "500px", "background-color": "#FFFFFF", "padding": "10px"}
+                style={"height": CHARTS_HEIGHT, "background-color": "#FFFFFF", "padding": "10px"}
             )
         )
     ], style={
@@ -75,12 +76,12 @@ def create_chart3_card():
         dcc.Loading(
             dbc.CardBody(
             dcc.Graph(id="chart3", style={"height": "100%"}),
-                style={"height": "100%", "background-color": "#FFFFFF", "padding": "10px"}
+                style={"height": CHARTS_HEIGHT, "background-color": "#FFFFFF", "padding": "10px"}
             )
         )
     ], style={
         "box-shadow": "0 4px 8px 0 rgba(0,0,0,0.2)",
         "border-radius": "10px",
         "margin": "15px",
-        "height": "100%"
+        "height": CHARTS_HEIGHT
     })

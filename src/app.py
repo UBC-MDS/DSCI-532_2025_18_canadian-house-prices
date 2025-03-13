@@ -8,14 +8,13 @@ from src.callbacks.charts import register_callbacks as register_charts_callbacks
 
 df = load_data()
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = Dash(__name__, title="Canadian House Prices", external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
-
-app.layout = create_layout(df)
 
 register_filters_callbacks(app)
 register_charts_callbacks(app)
 
+app.layout = create_layout(df)
 
 if __name__ == "__main__":
     app.run_server(debug=False)

@@ -19,12 +19,12 @@ def create_layout(df):
                     dbc.Row([  # First set of charts/cards
                         dbc.Col(create_map_card(), width=6, className="h-100"),
                         dbc.Col(create_chart1_card(), width=6, className="h-100")
-                    ], className="gx-2 mb-4", style={"height": "500px"}),
+                    ], className="gx-2 mb-4", style={"height": "40vh"}),
 
                     dbc.Row([  # Second set of charts/cards
                         dbc.Col(create_chart3_card(), width=6, className="h-100"),
                         dbc.Col(create_chart2_card(), width=6, className="h-100")
-                    ], className="gx-2 mb-4", style={"height": "500px"})
+                    ], className="gx-2 mb-4", style={"height": "40vh"})
                 ], className="mb-3", style={"padding-top": "20px", "background-color": "#FAFDFF"})
             ]),
         ])

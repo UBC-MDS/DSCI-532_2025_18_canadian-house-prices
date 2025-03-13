@@ -6,8 +6,9 @@ import plotly.graph_objects as go
 import altair as alt
 from src.utils.data_loader import load_data
 import requests  # For fetching GeoJSON data
+from functools import lru_cache  # Added for caching
 
-# Load the dataset
+# Load the dataset once when the module is imported
 df = load_data()
 
 # Define constants for chart styling
@@ -17,7 +18,51 @@ CHART_AXIS_TICKFONT_FONT_SIZE = 16
 # Enable vegafusion for better Altair performance with large datasets
 alt.data_transformers.enable("vegafusion")
 
+# Fetch GeoJSON data
+geojson_url = "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/canada.geojson"
+try:
+    response = requests.get(geojson_url)
+    response.raise_for_status()  # Raise an error if the request fails
+    geojson_data = response.json()
+except requests.exceptions.RequestException as e:
+    print(f"Error fetching GeoJSON: {e}")
+    geojson_data = {"features": []}  # Fallback to empty data
+
+@lru_cache(maxsize=128)
+def get_filtered_data(selected_cities: tuple, selected_provinces: tuple, 
+                      bedrooms_range: tuple, bathrooms_range: tuple):
+    """
+    Filter the global DataFrame based on the provided parameters.
+
+    Args:
+        selected_cities: Tuple of selected cities.
+        selected_provinces: Tuple of selected provinces.
+        bedrooms_range: Tuple of (min, max) bedrooms.
+        bathrooms_range: Tuple of (min, max) bathrooms.
+
+    Returns:
+        Filtered DataFrame.
+    """
+    filtered_df = df.copy()
+    if selected_cities:
+        filtered_df = filtered_df[filtered_df["City"].isin(selected_cities)]
+    if selected_provinces:
+        filtered_df = filtered_df[filtered_df["Province"].isin(selected_provinces)]
+    # Always apply range filters since sliders provide default values
+    filtered_df = filtered_df[(filtered_df["Number_Beds"] >= bedrooms_range[0]) & 
+                              (filtered_df["Number_Beds"] <= bedrooms_range[1])]
+    filtered_df = filtered_df[(filtered_df["Number_Baths"] >= bathrooms_range[0]) & 
+                              (filtered_df["Number_Baths"] <= bathrooms_range[1])]
+    return filtered_df
+
 def register_callbacks(app):
+    """
+    Register callbacks for the Dash application to update the dashboard
+    based on user inputs.
+    
+    Args:
+        app: The Dash application instance.
+    """
     @app.callback(
         [Output("median-price", "children"),
          Output("avg-bedrooms", "children"),
@@ -33,20 +78,28 @@ def register_callbacks(app):
          Input("bathrooms-slider", "value")]
     )
     def update_dashboard(selected_cities, selected_provinces, bedrooms_range, bathrooms_range):
-        # Create a copy of the dataframe to filter
-        filtered_df = df.copy()
+        """
+        Update the dashboard's summary statistics and charts based on user inputs.
         
-        # Apply filters based on user inputs
-        if selected_cities:
-            filtered_df = filtered_df[filtered_df["City"].isin(selected_cities)]
-        if selected_provinces:
-            filtered_df = filtered_df[filtered_df["Province"].isin(selected_provinces)]
-        if bedrooms_range:
-            filtered_df = filtered_df[(filtered_df["Number_Beds"] >= bedrooms_range[0]) & 
-                                      (filtered_df["Number_Beds"] <= bedrooms_range[1])]
-        if bathrooms_range:
-            filtered_df = filtered_df[(filtered_df["Number_Baths"] >= bathrooms_range[0]) & 
-                                      (filtered_df["Number_Baths"] <= bathrooms_range[1])]
+        Args:
+            selected_cities: List of selected cities from the city filter.
+            selected_provinces: List of selected provinces from the province filter.
+            bedrooms_range: Tuple of min and max bedrooms from the slider.
+            bathrooms_range: Tuple of min and max bathrooms from the slider.
+        
+        Returns:
+            Tuple containing updated HTML components for summary statistics and
+            chart specifications/figures.
+        """
+        # Convert lists to tuples for caching
+        selected_cities_tuple = tuple(selected_cities) if selected_cities else tuple()
+        selected_provinces_tuple = tuple(selected_provinces) if selected_provinces else tuple()
+        bedrooms_range_tuple = tuple(bedrooms_range)
+        bathrooms_range_tuple = tuple(bathrooms_range)
+        
+        # Get filtered DataFrame using the cached function
+        filtered_df = get_filtered_data(selected_cities_tuple, selected_provinces_tuple, 
+                                        bedrooms_range_tuple, bathrooms_range_tuple)
 
         # Calculate summary statistics
         median_price = filtered_df["Price"].median()
@@ -55,34 +108,43 @@ def register_callbacks(app):
         min_price = filtered_df["Price"].min()
         max_price = filtered_df["Price"].max()
 
-        # Function to compute boxplot statistics for a given group
+        # Optimized function to compute boxplot statistics for a given group
         def compute_boxplot_stats(group_df, group_col):
+            """
+            Compute boxplot statistics (quartiles, whiskers, outliers) for a grouped column.
+            
+            Args:
+                group_df: DataFrame to compute statistics on.
+                group_col: Column name to group by.
+            
+            Returns:
+                Tuple of (stats DataFrame, DataFrame with outlier flags).
+            """
             stats = group_df.groupby(group_col)["Price"].describe().reset_index()
             stats = stats.rename(columns={'25%': 'Q1', '50%': 'median', '75%': 'Q3'})
             stats['IQR'] = stats['Q3'] - stats['Q1']
             stats['whisker_low_limit'] = stats['Q1'] - 1.5 * stats['IQR']
             stats['whisker_high_limit'] = stats['Q3'] + 1.5 * stats['IQR']
 
-            # Compute actual whisker ends (Min and Max within whiskers)
-            def get_whiskers(group):
-                q1 = group['Price'].quantile(0.25)
-                q3 = group['Price'].quantile(0.75)
-                iqr = q3 - q1
-                whisker_low_limit = q1 - 1.5 * iqr
-                whisker_high_limit = q3 + 1.5 * iqr
-                whisker_low = group['Price'][group['Price'] >= whisker_low_limit].min()
-                whisker_high = group['Price'][group['Price'] <= whisker_high_limit].max()
-                return pd.Series({'Min': whisker_low, 'Max': whisker_high})
+            # Merge whisker limits back into the original DataFrame
+            group_df = group_df.merge(stats[[group_col, 'whisker_low_limit', 'whisker_high_limit']], 
+                                     on=group_col, how='left')
 
-            whiskers = group_df.groupby(group_col).apply(get_whiskers).reset_index()
-            stats = stats.merge(whiskers, on=group_col)
+            # Compute whisker ends using vectorized operations
+            whisker_low = group_df[group_df['Price'] >= group_df['whisker_low_limit']]\
+                             .groupby(group_col)['Price'].min().rename('Min')
+            whisker_high = group_df[group_df['Price'] <= group_df['whisker_high_limit']]\
+                              .groupby(group_col)['Price'].max().rename('Max')
 
-            # Identify outliers in the original data
-            stats_subset = stats[[group_col, 'Min', 'Max']]
-            group_df = group_df.merge(stats_subset, on=group_col, how="left")
-            group_df['is_outlier'] = (group_df['Price'] < group_df['Min']) | (group_df['Price'] > group_df['Max'])
+            # Combine into stats
+            stats = stats.merge(whisker_low, on=group_col, how='left')
+            stats = stats.merge(whisker_high, on=group_col, how='left')
+
+            # Identify outliers
+            group_df['is_outlier'] = (group_df['Price'] < group_df['whisker_low_limit']) | \
+                                     (group_df['Price'] > group_df['whisker_high_limit'])
+
             return stats, group_df
-
 
         # Chart 1: City Price Distribution (Altair Boxplot)
         if not filtered_df.empty:
@@ -357,7 +419,6 @@ def register_callbacks(app):
             )
 
         # Map: Altair-based map of Canadian provinces with city markers
-        geojson_url = "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/canada.geojson"
         wikipedia_data = pd.DataFrame({
             "name": filtered_df["Province"].unique() if selected_provinces else df["Province"].unique(),
             "wikipedia": [
@@ -377,15 +438,6 @@ def register_callbacks(app):
         if "Halifax" in map_df["City"].values:
             map_df.loc[map_df["City"] == "Halifax", "Latitude"] = 44.6488
             map_df.loc[map_df["City"] == "Halifax", "Longitude"] = -63.5752
-
-        # Fetch GeoJSON data
-        try:
-            response = requests.get(geojson_url)
-            response.raise_for_status()  # Raise an error if the request fails
-            geojson_data = response.json()
-        except requests.exceptions.RequestException as e:
-            print(f"Error fetching GeoJSON: {e}")
-            geojson_data = {"features": []}  # Fallback to empty data
 
         base_map = alt.Chart(
             alt.Data(values=geojson_data['features'])
