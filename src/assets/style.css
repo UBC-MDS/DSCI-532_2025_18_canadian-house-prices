@@ -80,13 +80,13 @@ body {
 .summary-card h5 {
     color: var(--white);
     margin: 0;
-    font-size: 16px;
+    font-size: 20px;
 }
 
 .summary-card h3 {
     color: var(--accent-blue);
     margin: 0;
-    font-size: 24px;
+    font-size: 28px;
 }
 
 /* Chart and Map Styling */

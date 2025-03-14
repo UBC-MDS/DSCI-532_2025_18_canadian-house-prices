@@ -2,6 +2,7 @@ import dash_bootstrap_components as dbc
 from dash import html, dcc
 
 def create_sidebar(df):
+    print("create_sidebar called from components/sidebar.py")
     return dbc.Col([
         html.H3("Canadian House Prices Dashboard", className="mb-4", style={"color": "#FFFFFF", "font-weight": "bold"}),
         
@@ -139,6 +140,6 @@ def create_sidebar(df):
             style={"display": "none"}  # Initially hidden
             )
         
-        ],  className = "sidebar", width=2, 
+        ],  className = "sidebar mb-2", width=2, 
 
         )
