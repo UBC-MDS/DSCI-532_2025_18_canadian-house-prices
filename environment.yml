@@ -17,7 +17,5 @@ dependencies:
   - ipykernel  # Optional, for Jupyter support
   - tabulate  # Optional, for df.to_markdown()
   - lxml      
-  - pytest
-  - iniconfig
   - pip:
       - dash-vega-components
