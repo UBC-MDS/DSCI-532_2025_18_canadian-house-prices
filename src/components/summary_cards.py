@@ -43,4 +43,5 @@ def create_summary_cards():
             ),
             width=SUMMARY_CARD_WIDTH
         )
+
     ], className="flex-grow-1", style={"height": "5vh"})
