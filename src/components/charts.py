@@ -7,8 +7,20 @@ CHARTS_HEIGHT= "40vh"
 def create_map_card():
     return dbc.Card(
         [
-            dcc.Loading(
-                dbc.CardBody(
+            # dcc.Loading(
+            #     dbc.CardBody(
+            #         [
+            #             Vega(
+            #                 id="map",
+            #                 spec={},
+            #                 opt={"renderer": "canvas", "actions": False},
+            #                 style={"width": "100%", "height": "100%"}
+            #             )
+            #         ],
+            #         style={"height": CHARTS_HEIGHT}  # Fixed height for the card body
+            #     )
+            # )
+            dbc.CardBody(
                     [
                         Vega(
                             id="map",
@@ -18,7 +30,6 @@ def create_map_card():
                         )
                     ],
                     style={"height": CHARTS_HEIGHT}  # Fixed height for the card body
-                )
             )
         ], style={
         "box-shadow": "0 4px 8px 0 rgba(0,0,0,0.2)",
@@ -27,6 +38,7 @@ def create_map_card():
         "height": "100%"
     })
     
+# City Price Distribution
 def create_chart1_card():
     return dbc.Card([
         dcc.Loading(
@@ -49,6 +61,7 @@ def create_chart1_card():
         "height": "100%"
     })
 
+# Price vs Number of Bedrooms
 def create_chart2_card():
     return dbc.Card([
         dcc.Loading(
@@ -68,9 +81,10 @@ def create_chart2_card():
         "box-shadow": "0 4px 8px 0 rgba(0,0,0,0.2)",
         "border-radius": "10px",
         "margin": "15px",
-        "height": "100%"
+        "height": "97%"
     })
 
+# Median House Price to Family Income Ratio By City
 def create_chart3_card():
     return dbc.Card([
         dcc.Loading(
@@ -83,5 +97,5 @@ def create_chart3_card():
         "box-shadow": "0 4px 8px 0 rgba(0,0,0,0.2)",
         "border-radius": "10px",
         "margin": "15px",
-        "height": CHARTS_HEIGHT
+        "height": "97%"
     })

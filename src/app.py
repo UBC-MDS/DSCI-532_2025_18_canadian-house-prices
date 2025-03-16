@@ -15,7 +15,5 @@ app.layout = create_layout(df)
 register_filters_callbacks(app)
 register_charts_callbacks(app)
 
-
-
 if __name__ == "__main__":
     app.run_server(debug=True)

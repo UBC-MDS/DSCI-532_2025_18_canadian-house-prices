@@ -19,43 +19,13 @@ def create_layout(df):
                                 dbc.Col(create_map_card(), width=6, className="h-100"),
                                 dbc.Col(create_chart1_card(), width=6, className="h-100")
                             ], className="gx-2 flex-grow-1"),
-                            # html.Br(),
+                            html.Br(),
                             dbc.Row([
                                 dbc.Col(create_chart3_card(), width=6, className="h-100"),
                                 dbc.Col(create_chart2_card(), width=6, className="h-100")
                             ], className="gx-2 flex-grow-1"),
-                            
-
-
-                        ], className="d-flex flex-column flex-grow-1 h-100", 
+                        ], className="d-flex flex-column flex-grow-1 mb-2", 
                         style={"background-color": "#FFFFFF", "height": "100vh"})
-                # dcc.Loading(
-                #     id="loading-content",
-                #     type="dot",
-                #     color="#0E1731",
-                #     children=[
-                #         html.Div([
-                #             # html.Br(),
-                #             # html.Br(),
-                #             create_summary_cards(),  # Summary cards
-                #             dbc.Row([
-                #                 dbc.Col(create_map_card(), width=6, className="h-100"),
-                #                 dbc.Col(create_chart1_card(), width=6, className="h-100")
-                #             ], className="gx-2 flex-grow-1"),
-                #             # html.Br(),
-                #             dbc.Row([
-                #                 dbc.Col(create_chart3_card(), width=6, className="h-100"),
-                #                 dbc.Col(create_chart2_card(), width=6, className="h-100")
-                #             ], className="gx-2 flex-grow-1"),
-                            
-
-
-                #         ], className="d-flex flex-column flex-grow-1 h-100", 
-                #         style={"background-color": "#FFFFFF", "height": "100vh"})
-                #     ]
-                # ),
-                # className="d-flex flex-column h-100 mb-2",  
-                # style={"background-color": "#000000"}
             )
         ], className="h-100")
     ], style={"height": "100vh"})

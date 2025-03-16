@@ -125,7 +125,7 @@ def create_sidebar(df):
             id="about-text",
             children=[
             html.P(
-                "This project was done by Fazeeia Mohammed, Colombe Tolokin, Dominic Lam, and HUI Tang.",
+                "This project was done by Dominic Lam, Fazeeia Mohammed, Hui Tang, and Colombe Tolokin.",
                 style={"color": "#FFFFFF", "font-size": "20px"}
                 ),
             html.P(
@@ -133,13 +133,13 @@ def create_sidebar(df):
                 style={"color": "#FFFFFF", "font-size": "20px"}
                 ),
             html.P(
-                "Last Deployment Date: March 09, 2025",
+                "Last Deployment Date: March 17, 2025",
                 style={"color": "#FFFFFF", "font-size": "20px"}
                 )
             ],
             style={"display": "none"}  # Initially hidden
             )
         
-        ],  className = "sidebar mb-2", width=2, 
+        ],  className = "sidebar mb-2", width=2, style={"width": "14%"} 
 
         )
