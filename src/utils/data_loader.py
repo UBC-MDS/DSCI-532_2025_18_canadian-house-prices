@@ -3,10 +3,12 @@ import pandas as pd
 _data = None
 
 def load_data():
+
+    print("load_data called from data_loader.py")
     global _data
     if _data is None:
-
         file_path = r"data/processed/Cleaned_CanadianHousePrices.feather"
-        # _data = pd.read_csv(file_path, encoding='ISO-8859-1').dropna()
+        print("reading data from data_loader.py")
+
         _data = pd.read_feather(file_path).dropna()
     return _data
