@@ -184,9 +184,11 @@ def register_callbacks(app):
                 fontSize=25, font="Roboto, sans-serif", color="#000000", anchor="middle"
             ).configure_view(strokeWidth=0)
             return chart.to_dict(format="vega")
+
         
         df = pd.DataFrame(data)
         stats_city, outliers_city = compute_boxplot_stats(df, "City")
+
 
         city_medians = df.groupby("City")["Price"].median().sort_values()
         sorted_cities = city_medians.index.tolist()
@@ -252,6 +254,7 @@ def register_callbacks(app):
         Output("chart2", "spec"),
         Input('filtered-data', 'data')
     )
+
     def update_chart2(data):
         if not data:
             # Create a dummy DataFrame with one row
@@ -272,11 +275,12 @@ def register_callbacks(app):
                 fontSize=25, font="Roboto, sans-serif", color="#000000", anchor="middle"
             ).configure_view(strokeWidth=0)
             return chart.to_dict(format="vega")
+
         
         df = pd.DataFrame(data)
         stats_bedrooms, outliers_bedrooms = compute_boxplot_stats(df, "Number_Beds")
         x_encoding = alt.X("Number_Beds:N", scale=alt.Scale(paddingInner=0.5), title="Number of Bedrooms")
-        
+
         box_color = "#4682b4"
         
         # Box plot with fixed color
@@ -324,7 +328,7 @@ def register_callbacks(app):
             color=alt.value(box_color),
             tooltip=["Number_Beds:N", alt.Tooltip("Price:Q", format="$,.0f")]
         )
-        
+
         chart = (whiskers + box + median + outliers).properties(
             width="container", height="container", title="Price vs Number of Bedrooms"
         ).configure_title(fontSize=25, font="Roboto, sans-serif", color="#000000", anchor="middle"
@@ -337,9 +341,10 @@ def register_callbacks(app):
 
     # Callback 5: Update Chart 3 (Bubble Chart)
     @app.callback(
-        Output("chart3", "figure"),
-        Input('filtered-data', 'data')
+            Output("chart3", "figure"),
+            Input('filtered-data', 'data')
     )
+
     def update_chart3(data):
         if not data:
             fig = go.Figure()
@@ -454,5 +459,5 @@ def register_callbacks(app):
         final_map = (base_map + city_markers).properties(
             width="container", height="container", title="Map of Canadian Provinces with Selected Cities"
         ).configure_title(fontSize=25, font='Roboto, sans-serif', color="#000000", anchor='middle')
-        
+
         return final_map.to_dict(format="vega")
