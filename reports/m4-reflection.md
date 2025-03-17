@@ -27,9 +27,6 @@ Performance was one of the most significant challenges we faced throughout this 
   - We split callback functions into smaller units for better maintainability and performance.
   - Precomputed **boxplot statistics** for cities and bedrooms during startup to reduce repetitive calculations.
   - We reduced the amount of data sent to Altair by performing more aggregation in Python before passing data to the visualization.
-  
-- **Profiling and Parallelization**: We added profiling to the code to pinpoint specific performance bottlenecks and implemented parallelization techniques to improve processing time.
-  - We used **joblib** to parallelize chart computations, allowing for concurrency and reducing overall processing time.
 
 Although the performance was significantly improved, we are continuing to monitor the dashboard for potential further optimizations.
 
