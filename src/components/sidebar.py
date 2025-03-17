@@ -54,9 +54,6 @@ def create_sidebar(df):
                 )
             ], className="mb-4"),
         
-        # Add a break between Province and City
-        html.Br(),
-        
         # City Dropdown Menu
         dbc.Row([
             html.H5("City", className="mb-4", style={"color": "#FFFFFF"}),
@@ -68,9 +65,6 @@ def create_sidebar(df):
                 value=["Vancouver", "Toronto", "Montreal", "Ottawa"]
                 )
             ], className="mb-4"),
-        
-        # Add a break between City and other filters
-        html.Br(),
         
         # Bedrooms Range Slider
         dbc.Row([
