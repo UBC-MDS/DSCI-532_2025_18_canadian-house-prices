@@ -6,6 +6,21 @@ from src.components.summary_cards import create_summary_cards
 from src.components.charts import create_map_card, create_chart1_card, create_chart2_card, create_chart3_card
 
 def create_layout(df):
+    """
+    Creates the main layout of the Dash application.
+
+    Args:
+        df (pd.DataFrame): The dataset used for populating sidebar filters.
+
+    Returns:
+        dbc.Container: A Bootstrap container containing the full dashboard layout.
+    
+    Layout Structure:
+        - Sidebar (Always Visible)
+        - Summary Cards
+        - First Row: Map and City Price Distribution Chart
+        - Second Row: Price vs Bedrooms and Median Price to Income Ratio Chart
+    """
     return dbc.Container(fluid=True, children=[
         dbc.Row([
             create_sidebar(df),  # Sidebar, always visible
