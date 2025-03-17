@@ -23,6 +23,7 @@ def create_layout(df):
                                 dbc.Col(create_chart3_card(), width=6, className="h-100"),
                                 dbc.Col(create_chart2_card(), width=6, className="h-100")
                             ], className="gx-2 flex-grow-1"),
+                            dcc.Store(id='filtered-data', storage_type='memory'),
                         ], className="d-flex flex-column flex-grow-1 mb-2", 
                         style={"background-color": "#FFFFFF", "height": "100vh"})
             )
