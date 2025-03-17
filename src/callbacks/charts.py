@@ -8,8 +8,8 @@ from src.utils.data_loader import load_data
 import requests  # For fetching GeoJSON data
 from functools import lru_cache  # Added for caching
 
-# Load the dataset once when the module is imported
-df = load_data()
+# Load the datasets once when the module is imported
+df_locations, df_housing = load_data()
 
 # Define constants for chart styling
 CHART_AXIS_TITLE_FONT_SIZE = 18
@@ -32,7 +32,7 @@ except requests.exceptions.RequestException as e:
 def get_filtered_data(selected_cities: tuple, selected_provinces: tuple, 
                       bedrooms_range: tuple, bathrooms_range: tuple):
     """
-    Filter the global DataFrame based on the provided parameters.
+    Filter the global df_housing DataFrame based on the provided parameters.
 
     Args:
         selected_cities: Tuple of selected cities.
@@ -43,7 +43,7 @@ def get_filtered_data(selected_cities: tuple, selected_provinces: tuple,
     Returns:
         Filtered DataFrame.
     """
-    filtered_df = df.copy()
+    filtered_df = df_housing.copy()
     if selected_cities:
         filtered_df = filtered_df[filtered_df["City"].isin(selected_cities)]
     if selected_provinces:
@@ -420,19 +420,22 @@ def register_callbacks(app):
 
         # Map: Altair-based map of Canadian provinces with city markers
         wikipedia_data = pd.DataFrame({
-            "name": filtered_df["Province"].unique() if selected_provinces else df["Province"].unique(),
+            "name": filtered_df["Province"].unique() if selected_provinces else df_housing["Province"].unique(),
             "wikipedia": [
                 f"https://en.wikipedia.org/wiki/{prov.replace(' ', '_')}" for prov in 
-                (filtered_df["Province"].unique() if selected_provinces else df["Province"].unique())
+                (filtered_df["Province"].unique() if selected_provinces else df_housing["Province"].unique())
             ]
         })
 
-        map_df = filtered_df.groupby("City").agg({
-            "Latitude": "mean",
-            "Longitude": "mean",
-            "Price": "median",
-            "Number_Beds": "mean"
-        }).reset_index()
+        # Compute aggregated stats for map and merge with locations
+        if not filtered_df.empty:
+            agg_df = filtered_df.groupby(["City", "Province"]).agg({
+                "Price": "median",
+                "Number_Beds": "mean"
+            }).reset_index()
+            map_df = pd.merge(agg_df, df_locations, on=["City", "Province"], how="left")
+        else:
+            map_df = pd.DataFrame(columns=["City", "Province", "Price", "Number_Beds", "Latitude", "Longitude"])
 
         # Adjust Halifax coordinates if present
         if "Halifax" in map_df["City"].values:

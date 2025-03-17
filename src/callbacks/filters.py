@@ -1,7 +1,8 @@
 from dash import Output, Input, State
 from src.utils.data_loader import load_data
 
-df = load_data()
+# Load the datasets once when the module is imported
+df_locations, df_housing = load_data()
 
 def register_callbacks(app):
     # Callback for updating city options based on selected provinces
@@ -11,10 +12,10 @@ def register_callbacks(app):
     )
     def update_city_options(selected_provinces):
         if selected_provinces and len(selected_provinces) > 0:
-            filtered_df = df[df["Province"].isin(selected_provinces)]
+            filtered_df = df_housing[df_housing["Province"].isin(selected_provinces)]
             city_options = [{"label": city, "value": city} for city in filtered_df["City"].unique()]
         else:
-            city_options = [{"label": city, "value": city} for city in df["City"].unique()]
+            city_options = [{"label": city, "value": city} for city in df_housing["City"].unique()]
         return city_options
 
     # Callback to reset the filters to default values
@@ -30,8 +31,8 @@ def register_callbacks(app):
         return (
             ["Vancouver", "Toronto", "Montreal", "Ottawa"],
             [],  # Province filter is reset to empty (or default values if you prefer)
-            [df["Number_Beds"].min(), df["Number_Beds"].max()],
-            [df["Number_Baths"].min(), df["Number_Baths"].max()]
+            [df_housing["Number_Beds"].min(), df_housing["Number_Beds"].max()],
+            [df_housing["Number_Baths"].min(), df_housing["Number_Baths"].max()]
         )
 
     # Callback to toggle About text visibility
@@ -47,4 +48,3 @@ def register_callbacks(app):
         if current_style["display"] == "none":
             return {"display": "block"}  # Show the text
         return {"display": "none"}  # Hide the text again
-       
