@@ -29,7 +29,7 @@ The dashboard allows users to:
 
 - **Explore Data:** Filter data by city, price range, number of bedrooms/bathrooms, and other key variables.
 - **Support Decision-Making:** Provide insights for homebuyers, investors, and policymakers.
-- 
+
 ## Demo
 
 ### Try the Live Dashboard  
