@@ -6,7 +6,7 @@ Welcome to the **Canadian House Prices Dashboard**! This interactive tool provid
 
 ### Try the Live Dashboard  
 
-Click below to explore housing trends in Canada:
+Watch this demo to explore housing trends in Canada:
 
 [![Demo GIF of the Dashboard](images/demo.gif)](images/demo.gif)
 
@@ -14,6 +14,7 @@ Click below to explore housing trends in Canada:
 ## Deployed Dashboard
 
 Explore the live dashboard here:  
+
 [https://canadian-house-prices.onrender.com/](https://canadian-house-prices.onrender.com/)
 
 
@@ -72,7 +73,7 @@ Open your web browser and navigate to http://127.0.0.1:8050/ (or the URL indicat
 
 ### How to Use the Dashboard
 
-- **Select a city or province** from the dropdown to view its real estate data.
+- **Select a city or province** from the dropdown to view real estate price trends.
 - **Adjust filters** for price range, number of bedrooms, and bathrooms to refine your search.
 - **Hover over visualizations** to see detailed insights.
 - **Use dynamic charts** to compare housing trends across different locations.  
