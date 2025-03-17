@@ -8,6 +8,7 @@ from src.utils.data_loader import load_data
 import requests  # For fetching GeoJSON data
 from functools import lru_cache
 
+
 # Load datasets once when the module is imported
 df_locations, df_housing = load_data()
 
@@ -291,6 +292,7 @@ def register_callbacks(app):
             "Price": "median", "Number_Beds": "mean"
         }).reset_index()
         map_df = pd.merge(agg_df, df_locations, on=["City", "Province"], how="left")
+
         if "Halifax" in map_df["City"].values:
             map_df.loc[map_df["City"] == "Halifax", "Latitude"] = 44.6488
             map_df.loc[map_df["City"] == "Halifax", "Longitude"] = -63.5752

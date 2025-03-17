@@ -4,7 +4,18 @@ from dash import html, dcc
 SUMMARY_CARD_WIDTH = 3
 
 def create_summary_cards():
+    """
+    Creates a row of summary cards displaying key housing market metrics.
 
+    Returns:
+        dbc.Row: A Bootstrap-styled row containing four summary statistic cards.
+
+    Summary Cards:
+        - Median Price
+        - Average Number of Bedrooms
+        - Average Number of Bathrooms
+        - Price Range
+    """
     return dbc.Row([
 
         dbc.Col(

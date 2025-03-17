@@ -2,6 +2,26 @@ import dash_bootstrap_components as dbc
 from dash import html, dcc
 
 def create_sidebar(df):
+    """
+    Creates the sidebar component for the Canadian House Prices Dashboard.
+
+    Args:
+        df (pd.DataFrame): The dataset used for populating sidebar filter options.
+
+    Returns:
+        dbc.Col: A Bootstrap-styled column containing filters, buttons, and additional information.
+    
+    Sidebar Components:
+        - Dashboard Title
+        - Description
+        - Province Multi-Select Dropdown
+        - City Multi-Select Dropdown
+        - Bedrooms Range Slider
+        - Bathrooms Range Slider
+        - Reset Filters Button
+        - GitHub & About Buttons
+        - About Information (Toggled)
+    """
     print("create_sidebar called from components/sidebar.py")
     return dbc.Col([
         html.H3("Canadian House Prices Dashboard", className="mb-4", style={"color": "#FFFFFF", "font-weight": "bold"}),
