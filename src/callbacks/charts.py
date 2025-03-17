@@ -135,7 +135,13 @@ def register_callbacks(app):
     )
     def update_summary_stats(data):
         if not data:
-            return ["N/A", "N/A", "N/A", "N/A"]
+            # Define a consistent, centered, bolded "No Data" message for all cards
+            no_data_message = html.Div(
+                html.H3("No Data Available", style={"fontWeight": "bold", "textAlign": "center", "color": "#FFFFFF"}),
+                style={"display": "flex", "justifyContent": "center", "alignItems": "center", "height": "100%"}
+            )
+            return [no_data_message, no_data_message, no_data_message, no_data_message]
+
         df = pd.DataFrame(data)
         median_price = df["Price"].median()
         avg_bedrooms = df["Number_Beds"].mean()
@@ -160,21 +166,27 @@ def register_callbacks(app):
     )
     def update_chart1(data):
         if not data:
-            return alt.Chart(pd.DataFrame()).mark_text().encode(
-                text=alt.value("No Data Available")
+            # Create a dummy DataFrame with one row
+            dummy_df = pd.DataFrame({"placeholder": [0]})
+            chart = alt.Chart(dummy_df).mark_text(
+                size=20, 
+                align="center", 
+                baseline="middle",
+                fontWeight="bold"  # Make the text bold
+            ).encode(
+                text=alt.value("No Data Available for Selected Filters"),
+                # Remove explicit x and y encodings to let align and baseline center it naturally
             ).properties(
-                title="City Price Distribution", width=600, height=400
-            ).to_dict()
+                width="container",
+                height="container",
+                title="City Price Distribution"
+            ).configure_title(
+                fontSize=25, font="Roboto, sans-serif", color="#000000", anchor="middle"
+            ).configure_view(strokeWidth=0)
+            return chart.to_dict(format="vega")
         
         df = pd.DataFrame(data)
         stats_city, outliers_city = compute_boxplot_stats(df, "City")
-
-        # Debug: Check if outliers exist
-        num_outliers = len(outliers_city[outliers_city["is_outlier"]])
-        print(f"Number of outliers detected: {num_outliers}")
-        if num_outliers == 0:
-            print("No outliers found. Check data range or IQR calculation.")
-            print(outliers_city[["City", "Price", "whisker_low_limit", "whisker_high_limit", "is_outlier"]].head())
 
         city_medians = df.groupby("City")["Price"].median().sort_values()
         sorted_cities = city_medians.index.tolist()
@@ -242,11 +254,24 @@ def register_callbacks(app):
     )
     def update_chart2(data):
         if not data:
-            return alt.Chart(pd.DataFrame()).mark_text().encode(
-                text=alt.value("No Data Available")
+            # Create a dummy DataFrame with one row
+            dummy_df = pd.DataFrame({"placeholder": [0]})
+            chart = alt.Chart(dummy_df).mark_text(
+                size=20, 
+                align="center", 
+                baseline="middle",
+                fontWeight="bold"  # Make the text bold
+            ).encode(
+                text=alt.value("No Data Available for Selected Filters"),
+                # No explicit x or y encodings to center naturally
             ).properties(
-                title="Price vs Number of Bedrooms", width=600, height=400
-            ).to_dict()
+                width="container",
+                height="container",
+                title="Price vs Number of Bedrooms"
+            ).configure_title(
+                fontSize=25, font="Roboto, sans-serif", color="#000000", anchor="middle"
+            ).configure_view(strokeWidth=0)
+            return chart.to_dict(format="vega")
         
         df = pd.DataFrame(data)
         stats_bedrooms, outliers_bedrooms = compute_boxplot_stats(df, "Number_Beds")
@@ -318,9 +343,29 @@ def register_callbacks(app):
     def update_chart3(data):
         if not data:
             fig = go.Figure()
+            fig.add_annotation(
+                text="<b>No Data Available for Selected Filters</b>",  # Use HTML <b> tags for bold
+                xref="paper", yref="paper",
+                x=0.5, y=0.5,  # Center of the chart area (0 to 1 range)
+                showarrow=False,
+                font=dict(
+                    size=20, 
+                    family="Roboto, sans-serif", 
+                    color="#000000"
+                ),
+                align="center"  # Ensure text is centered
+            )
             fig.update_layout(
-                title="Median House Price to Family Income Ratio by City",
-                xaxis_title="City", yaxis_title="Price to Income Ratio", template="plotly_white",
+                title=dict(
+                    text="Median House Price to Family Income Ratio by City",
+                    font=dict(size=25, family="Roboto, sans-serif", color="#000000"),
+                    x=0.5, y=0.95, xanchor="center", yanchor="top"
+                ),
+                xaxis_title="City",
+                yaxis_title="Price to Income Ratio",
+                template="plotly_white",
+                xaxis=dict(showgrid=False, zeroline=False),
+                yaxis=dict(showgrid=False, zeroline=False)
             )
             return fig
         
