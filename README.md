@@ -8,6 +8,13 @@ The Canadian House Prices Dashboard was inspired by the need to simplify the exp
 
 Our goal is to offer an accessible and intuitive tool, allowing users to filter and analyze housing data by key attributes such as province, city, number of bedrooms, and bathrooms. The dashboard integrates dynamic visualizations like bubble charts and Altair maps, transforming raw data into actionable knowledge. By making complex data more accessible, this tool empowers users to make informed decisions and explore emerging housing trends with curiosity.
 
+## Project Overview
+
+The dashboard allows users to:
+
+- **Explore Data:** Filter data by city, price range, number of bedrooms/bathrooms, and other key variables.
+- **Support Decision-Making:** Provide insights for homebuyers, investors, and policymakers.
+- 
 ## Demo
 
 ### Try the Live Dashboard  
@@ -29,15 +36,6 @@ Explore the live dashboard here:
 - Colombe Tolokin
 - Fazeeia Mohammed
 - Hui Tang
-
-
-## Project Overview
-
-The dashboard allows users to:
-
-- **Explore Data:** Filter data by city, price range, number of bedrooms/bathrooms, and other key variables.
-- **Support Decision-Making:** Provide insights for homebuyers, investors, and policymakers.
-
 
 ## Prerequisites
 
