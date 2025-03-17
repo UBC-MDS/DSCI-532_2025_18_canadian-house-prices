@@ -2,6 +2,27 @@ import dash_bootstrap_components as dbc
 from dash import html, dcc
 
 def create_sidebar(df):
+    """
+    Creates the sidebar component for the Canadian House Prices Dashboard.
+
+    Args:
+        df (pd.DataFrame): The dataset used for populating sidebar filter options.
+
+    Returns:
+        dbc.Col: A Bootstrap-styled column containing filters, buttons, and additional information.
+    
+    Sidebar Components:
+        - Dashboard Title
+        - Description
+        - Province Multi-Select Dropdown
+        - City Multi-Select Dropdown
+        - Bedrooms Range Slider
+        - Bathrooms Range Slider
+        - Reset Filters Button
+        - GitHub & About Buttons
+        - About Information (Toggled)
+    """
+    print("create_sidebar called from components/sidebar.py")
     return dbc.Col([
         html.H3("Canadian House Prices Dashboard", className="mb-4", style={"color": "#FFFFFF", "font-weight": "bold"}),
         
@@ -33,9 +54,6 @@ def create_sidebar(df):
                 )
             ], className="mb-4"),
         
-        # Add a break between Province and City
-        html.Br(),
-        
         # City Dropdown Menu
         dbc.Row([
             html.H5("City", className="mb-4", style={"color": "#FFFFFF"}),
@@ -47,9 +65,6 @@ def create_sidebar(df):
                 value=["Vancouver", "Toronto", "Montreal", "Ottawa"]
                 )
             ], className="mb-4"),
-        
-        # Add a break between City and other filters
-        html.Br(),
         
         # Bedrooms Range Slider
         dbc.Row([
@@ -99,7 +114,7 @@ def create_sidebar(df):
                 dbc.Button(
                     "GitHub",
                     id="github-button",
-                    href="https://github.com/UBC-MDS/DSCI-532_2025_18_canadian-house-prices/tree/feat/dom-M3-joel-feedback-address",  # Replace with your repo URL
+                    href="https://github.com/UBC-MDS/DSCI-532_2025_18_canadian-house-prices/",
                     target="_blank",
                     color="secondary",
                     style={"background-color": "#0E1731", "color": "#FFFFFF", "border-color": "#053FA8", "font-size": "20px"},
@@ -124,7 +139,7 @@ def create_sidebar(df):
             id="about-text",
             children=[
             html.P(
-                "This project was done by Fazeeia Mohammed, Colombe Tolokin, Dominic Lam, and HUI Tang.",
+                "This project was done by Dominic Lam, Fazeeia Mohammed, Hui Tang, and Colombe Tolokin.",
                 style={"color": "#FFFFFF", "font-size": "20px"}
                 ),
             html.P(
@@ -132,13 +147,13 @@ def create_sidebar(df):
                 style={"color": "#FFFFFF", "font-size": "20px"}
                 ),
             html.P(
-                "Last Deployment Date: March 09, 2025",
+                "Last Deployment Date: March 17, 2025",
                 style={"color": "#FFFFFF", "font-size": "20px"}
                 )
             ],
             style={"display": "none"}  # Initially hidden
             )
         
-        ],  className = "sidebar", width=2, 
+        ],  className = "sidebar mb-2", width=2, style={"width": "14%"} 
 
         )
