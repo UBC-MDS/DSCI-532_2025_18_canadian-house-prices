@@ -120,7 +120,7 @@ def create_sidebar(df):
                 dbc.Button(
                     "GitHub",
                     id="github-button",
-                    href="https://github.com/UBC-MDS/DSCI-532_2025_18_canadian-house-prices/tree/feat/dom-M3-joel-feedback-address",  # Replace with your repo URL
+                    href="https://github.com/UBC-MDS/DSCI-532_2025_18_canadian-house-prices/",
                     target="_blank",
                     color="secondary",
                     style={"background-color": "#0E1731", "color": "#FFFFFF", "border-color": "#053FA8", "font-size": "20px"},
