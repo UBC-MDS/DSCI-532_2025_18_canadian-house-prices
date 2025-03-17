@@ -8,7 +8,6 @@ from src.utils.data_loader import load_data
 import requests  # For fetching GeoJSON data
 from functools import lru_cache
 
-
 # Load datasets once when the module is imported
 df_locations, df_housing = load_data()
 
@@ -18,6 +17,23 @@ CHART_AXIS_TICKFONT_FONT_SIZE = 16
 
 # Enable vegafusion for better Altair performance with large datasets
 alt.data_transformers.enable("vegafusion")
+
+# Define a color mapping for Canadian provinces/territories
+PROVINCE_COLORS = {
+    "British Columbia": "#1F75FE",        # Blue
+    "Alberta": "#009E60",                 # Green
+    "Saskatchewan": "#FFD700",            # Yellow
+    "Manitoba": "#C8102E",                # Red
+    "Ontario": "#006341",                 # Dark Green
+    "Quebec": "#6A0DAD",                  # Purple
+    "New Brunswick": "#FFA500",           # Orange
+    "Nova Scotia": "#6CACE4",             # Light Blue
+    "Prince Edward Island": "#FFC0CB",    # Pink
+    "Newfoundland and Labrador": "#008080", # Teal
+    "Northwest Territories": "#8B4513",   # Brown
+    "Nunavut": "#DAA520",                 # Gold
+    "Yukon": "#32CD32"                    # Lime
+}
 
 # Fetch GeoJSON data
 geojson_url = "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/canada.geojson"
@@ -149,38 +165,72 @@ def register_callbacks(app):
             ).properties(
                 title="City Price Distribution", width=600, height=400
             ).to_dict()
+        
         df = pd.DataFrame(data)
         stats_city, outliers_city = compute_boxplot_stats(df, "City")
+
+        # Debug: Check if outliers exist
+        num_outliers = len(outliers_city[outliers_city["is_outlier"]])
+        print(f"Number of outliers detected: {num_outliers}")
+        if num_outliers == 0:
+            print("No outliers found. Check data range or IQR calculation.")
+            print(outliers_city[["City", "Price", "whisker_low_limit", "whisker_high_limit", "is_outlier"]].head())
+
         city_medians = df.groupby("City")["Price"].median().sort_values()
         sorted_cities = city_medians.index.tolist()
         x_encoding = alt.X("City:N", scale=alt.Scale(paddingInner=0.5), title="City", sort=sorted_cities)
-        box = alt.Chart(stats_city).mark_bar().encode(
-            x=x_encoding, y=alt.Y("Q1:Q", title="Price"), y2="Q3:Q", color="City:N",
+        
+        # Merge province data into stats_city for color mapping (keep this)
+        city_province_map = df[["City", "Province"]].drop_duplicates()
+        stats_city = stats_city.merge(city_province_map, on="City", how="left")
+        # Do NOT merge into outliers_city; it already has Province from df
+
+        BAR_WIDTH = 30
+
+        # Box plot with province-based coloring
+        box = alt.Chart(stats_city).mark_bar(size=BAR_WIDTH).encode(
+            x=x_encoding, y=alt.Y("Q1:Q", title="Price"), y2="Q3:Q",
+            color=alt.Color("Province:N", scale=alt.Scale(domain=list(PROVINCE_COLORS.keys()), range=list(PROVINCE_COLORS.values())), legend=None),
             tooltip=["City:N", alt.Tooltip("Max:Q", format="$,.0f"), alt.Tooltip("Q3:Q", format="$,.0f"),
                      alt.Tooltip("median:Q", format="$,.0f"), alt.Tooltip("Q1:Q", format="$,.0f"),
                      alt.Tooltip("Min:Q", format="$,.0f")]
         )
-        median = alt.Chart(stats_city).mark_tick(color="white", size=20).encode(
+        
+        # Median tick
+        median = alt.Chart(stats_city).mark_tick(color="white", size=BAR_WIDTH).encode(
             x=x_encoding, y="median:Q",
             tooltip=["City:N", alt.Tooltip("Max:Q", format="$,.0f"), alt.Tooltip("Q3:Q", format="$,.0f"),
                      alt.Tooltip("median:Q", format="$,.0f"), alt.Tooltip("Q1:Q", format="$,.0f"),
                      alt.Tooltip("Min:Q", format="$,.0f")]
         )
+        
+        # Whiskers with province-based colors
         whiskers = (
-            alt.Chart(stats_city).mark_rule().encode(x=x_encoding, y="Min:Q", y2="Q1:Q", color="City:N",
-                                                     tooltip=["City:N", alt.Tooltip("Min:Q", format="$,.0f")]) +
-            alt.Chart(stats_city).mark_rule().encode(x=x_encoding, y="Q3:Q", y2="Max:Q", color="City:N",
-                                                     tooltip=["City:N", alt.Tooltip("Max:Q", format="$,.0f")])
+            alt.Chart(stats_city).mark_rule().encode(
+                x=x_encoding, y="Min:Q", y2="Q1:Q",
+                color=alt.Color("Province:N", scale=alt.Scale(domain=list(PROVINCE_COLORS.keys()), range=list(PROVINCE_COLORS.values())), legend=None),
+                tooltip=["City:N", alt.Tooltip("Min:Q", format="$,.0f")]
+            ) +
+            alt.Chart(stats_city).mark_rule().encode(
+                x=x_encoding, y="Q3:Q", y2="Max:Q",
+                color=alt.Color("Province:N", scale=alt.Scale(domain=list(PROVINCE_COLORS.keys()), range=list(PROVINCE_COLORS.values())), legend=None),
+                tooltip=["City:N", alt.Tooltip("Max:Q", format="$,.0f")]
+            )
         )
-        outliers = alt.Chart(outliers_city[outliers_city["is_outlier"]]).mark_point().encode(
-            x=x_encoding, y="Price:Q", color="City:N",
+        
+        # Outliers with province-based colors, using existing Province column
+        outliers = alt.Chart(outliers_city[outliers_city["is_outlier"]]).mark_circle(size=60, stroke="black", strokeWidth=1).encode(
+            x=x_encoding, y="Price:Q",
+            color=alt.Color("Province:N", scale=alt.Scale(domain=list(PROVINCE_COLORS.keys()), range=list(PROVINCE_COLORS.values())), legend=None),
             tooltip=["City:N", alt.Tooltip("Price:Q", format="$,.0f")]
         )
+        
         chart = (whiskers + box + median + outliers).properties(
             width="container", height="container", title="City Price Distribution"
         ).configure_title(fontSize=25, font="Roboto, sans-serif", color="#000000", anchor="middle"
         ).configure_axis(labelFontSize=CHART_AXIS_TICKFONT_FONT_SIZE, titleFontSize=CHART_AXIS_TITLE_FONT_SIZE
         ).configure_view(strokeWidth=0)
+        
         chart_spec = chart.to_dict(format="vega")
         chart_spec["autosize"] = {"type": "fit", "contains": "padding"}
         return chart_spec
@@ -202,22 +252,22 @@ def register_callbacks(app):
         df = pd.DataFrame(data)
         stats_bedrooms, outliers_bedrooms = compute_boxplot_stats(df, "Number_Beds")
         x_encoding = alt.X("Number_Beds:N", scale=alt.Scale(paddingInner=0.5), title="Number of Bedrooms")
-        
-        # Define a consistent color (e.g., a nice blue)
-        box_color = "#4682b4"  # Hex code for a professional blue (you can change this)
+     
+    
+        box_color = "#4682b4"
         
         # Box plot with fixed color
         box = alt.Chart(stats_bedrooms).mark_bar().encode(
             x=x_encoding, 
             y=alt.Y("Q1:Q", title="Price"), 
             y2="Q3:Q", 
-            color=alt.value(box_color),  # Fixed color instead of Number_Beds:N
+            color=alt.value(box_color),
             tooltip=["No. of Beds:N", alt.Tooltip("Max:Q", format="$,.0f"), alt.Tooltip("Q3:Q", format="$,.0f"),
                      alt.Tooltip("median:Q", format="$,.0f"), alt.Tooltip("Q1:Q", format="$,.0f"),
                      alt.Tooltip("Min:Q", format="$,.0f")]
         )
         
-        # Median tick (keeping white for contrast)
+        # Median tick
         median = alt.Chart(stats_bedrooms).mark_tick(color="white", size=20).encode(
             x=x_encoding, 
             y="median:Q",
@@ -232,14 +282,14 @@ def register_callbacks(app):
                 x=x_encoding, 
                 y="Min:Q", 
                 y2="Q1:Q", 
-                color=alt.value(box_color),  # Fixed color
+                color=alt.value(box_color),
                 tooltip=["No. of Beds:N", alt.Tooltip("Min:Q", format="$,.0f")]
             ) +
             alt.Chart(stats_bedrooms).mark_rule().encode(
                 x=x_encoding, 
                 y="Q3:Q", 
                 y2="Max:Q", 
-                color=alt.value(box_color),  # Fixed color
+                color=alt.value(box_color),
                 tooltip=["No. of Beds:N", alt.Tooltip("Max:Q", format="$,.0f")]
             )
         )
@@ -248,11 +298,10 @@ def register_callbacks(app):
         outliers = alt.Chart(outliers_bedrooms[outliers_bedrooms["is_outlier"]]).mark_point().encode(
             x=x_encoding, 
             y="Price:Q", 
-            color=alt.value(box_color),  # Fixed color
+            color=alt.value(box_color),
             tooltip=["Number_Beds:N", alt.Tooltip("Price:Q", format="$,.0f")]
         )
-        
-        # Combine and configure the chart
+      
         chart = (whiskers + box + median + outliers).properties(
             width="container", height="container", title="Price vs Number of Bedrooms"
         ).configure_title(fontSize=25, font="Roboto, sans-serif", color="#000000", anchor="middle"
@@ -274,19 +323,23 @@ def register_callbacks(app):
             fig = go.Figure()
             fig.update_layout(
                 title="Median House Price to Family Income Ratio by City",
-                xaxis_title="City", yaxis_title="Price to Income Ratio", template="plotly_white"
+                xaxis_title="City", yaxis_title="Price to Income Ratio", template="plotly_white",
             )
             return fig
+        
         df = pd.DataFrame(data)
         city_data = df.groupby("City").agg({
             "Price": "median", "Median_Family_Income": "median", "Population": "first", "Province": "first"
         }).reset_index()
         city_data["Price_Income_Ratio"] = city_data["Price"] / city_data["Median_Family_Income"]
+        
         fig = px.scatter(
             city_data, x="City", y="Price_Income_Ratio", size="Population", color="Province",
             hover_name="City", custom_data=["Price", "Province"],
-            title="Median House Price to Family Income Ratio by City", template="plotly_white", size_max=60
+            title="Median House Price to Family Income Ratio by City", template="plotly_white", size_max=60,
+            color_discrete_map=PROVINCE_COLORS
         )
+        
         fig.update_traces(
             marker=dict(sizemin=15),
             hovertemplate=(
@@ -294,12 +347,20 @@ def register_callbacks(app):
                 "Median Price: %{customdata[0]:$,.0f}<br>Price-Income Ratio: %{y:.2f}<extra></extra>"
             )
         )
+        
         fig.update_layout(
-            xaxis_title="City", yaxis_title="Price to Family Income Ratio", xaxis_tickangle=-45,
-            title=dict(text="Median House Price to Family Income Ratio by City", font=dict(size=25, family="Roboto, sans-serif", color="#000000"),
+            xaxis_title="City", yaxis_title="Price to Income Ratio", xaxis_tickangle=-45,
+            title=dict(text="Median House Price to Family Income Ratio by City", 
+                       font=dict(size=25, family="Roboto, sans-serif", color="#000000", weight='bold'),
                        x=0.5, y=0.95, xanchor="center", yanchor="top"),
-            xaxis_title_font_size=CHART_AXIS_TITLE_FONT_SIZE, yaxis_title_font_size=CHART_AXIS_TITLE_FONT_SIZE,
-            xaxis_tickfont_size=CHART_AXIS_TICKFONT_FONT_SIZE, yaxis_tickfont_size=CHART_AXIS_TICKFONT_FONT_SIZE,
+            xaxis=dict(
+                title=dict(text="City", font=dict(size=CHART_AXIS_TITLE_FONT_SIZE, family="Roboto, sans-serif", color="#000000", weight='bold')),
+                tickfont=dict(size=CHART_AXIS_TICKFONT_FONT_SIZE, family="Roboto, sans-serif", color="#000000", weight='bold')
+            ),
+            yaxis=dict(
+                title=dict(text="Price to Income Ratio", font=dict(size=CHART_AXIS_TITLE_FONT_SIZE, family="Roboto, sans-serif", color="#000000", weight='bold')),
+                tickfont=dict(size=CHART_AXIS_TICKFONT_FONT_SIZE, family="Roboto, sans-serif", color="#000000", weight='bold')
+            ),
             plot_bgcolor="#F5F5F5", paper_bgcolor="#FFFFFF", margin=dict(l=10, r=10, t=50, b=10)
         )
         return fig
@@ -316,11 +377,8 @@ def register_callbacks(app):
             ).properties(
                 title="Map of Canadian Provinces", width=600, height=400
             ).to_dict()
+        
         df = pd.DataFrame(data)
-        wikipedia_data = pd.DataFrame({
-            "name": df["Province"].unique(),
-            "wikipedia": [f"https://en.wikipedia.org/wiki/{prov.replace(' ', '_')}" for prov in df["Province"].unique()]
-        })
         agg_df = df.groupby(["City", "Province"]).agg({
             "Price": "median", "Number_Beds": "mean"
         }).reset_index()
@@ -329,23 +387,30 @@ def register_callbacks(app):
         if "Halifax" in map_df["City"].values:
             map_df.loc[map_df["City"] == "Halifax", "Latitude"] = 44.6488
             map_df.loc[map_df["City"] == "Halifax", "Longitude"] = -63.5752
+
         base_map = alt.Chart(alt.Data(values=geojson_data['features'])).mark_geoshape(stroke='white').project(
             'transverseMercator', rotate=[90, 0, 0]
         ).encode(
             tooltip=alt.Tooltip('properties.name:N', title="Province"),
-            color=alt.Color('properties.name:N', scale=alt.Scale(scheme='tableau20'), legend=None),
-            href='wikipedia:N'
-        ).transform_lookup(
-            lookup='properties.name', from_=alt.LookupData(wikipedia_data, 'name', ['wikipedia'])
+            color=alt.Color('properties.name:N', scale=alt.Scale(domain=list(PROVINCE_COLORS.keys()), range=list(PROVINCE_COLORS.values())), legend=None),
         )
-        city_markers = alt.Chart(map_df).mark_circle().encode(
-            longitude='Longitude:Q', latitude='Latitude:Q',
-            color=alt.Color('Price:Q', scale=alt.Scale(scheme='viridis')),
+
+        city_markers = alt.Chart(map_df).mark_point(
+            shape='triangle-down',
+            filled=True,
+            opacity=1,          # Low opacity for semi-transparency
+        ).encode(
+            longitude='Longitude:Q',
+            latitude='Latitude:Q',
+            color=alt.Color('Price:Q', scale=alt.Scale(scheme='sinebow')),  # More visible color scheme
             size=alt.Size('Price:Q', scale=alt.Scale(range=[50, 500])),
-            tooltip=["City:N", alt.Tooltip('Price:Q', title="Median Price", format=",.0f"),
+            tooltip=["City:N",
+                     alt.Tooltip('Price:Q', title="Median Price", format=",.0f"),
                      alt.Tooltip('Number_Beds:Q', title="Average Bedrooms", format=".2f")]
         )
+        
         final_map = (base_map + city_markers).properties(
             width="container", height="container", title="Map of Canadian Provinces with Selected Cities"
         ).configure_title(fontSize=25, font='Roboto, sans-serif', color="#000000", anchor='middle')
+
         return final_map.to_dict(format="vega")
