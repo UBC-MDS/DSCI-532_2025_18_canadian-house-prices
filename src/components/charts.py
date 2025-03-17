@@ -26,17 +26,6 @@ def create_map_card():
                     style={"height": CHARTS_HEIGHT}  # Fixed height for the card body
                 )
             )
-            # dbc.CardBody(
-            #         [
-            #             Vega(
-            #                 id="map",
-            #                 spec={},
-            #                 opt={"renderer": "canvas", "actions": False},
-            #                 style={"width": "100%", "height": "100%"}
-            #             )
-            #         ],
-            #         style={"height": CHARTS_HEIGHT}  # Fixed height for the card body
-            # )
         ], style={
         "box-shadow": "0 4px 8px 0 rgba(0,0,0,0.2)",
         "border-radius": "10px",
@@ -113,7 +102,11 @@ def create_chart3_card():
     return dbc.Card([
         dcc.Loading(
             dbc.CardBody(
-            dcc.Graph(id="chart3", style={"height": "100%"}),
+            dcc.Graph(
+                id="chart3", 
+                style={"height": "100%"},
+                config={"displayModeBar": False}  # This disables the toolbar
+                ),
                 style={"height": CHARTS_HEIGHT, "background-color": "#FFFFFF", "padding": "10px"}
             )
         )
