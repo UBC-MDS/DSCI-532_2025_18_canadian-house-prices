@@ -113,7 +113,11 @@ def create_chart3_card():
     return dbc.Card([
         dcc.Loading(
             dbc.CardBody(
-            dcc.Graph(id="chart3", style={"height": "100%"}),
+            dcc.Graph(
+                id="chart3", 
+                style={"height": "100%"},
+                config={"displayModeBar": False}  # This disables the toolbar
+                ),
                 style={"height": CHARTS_HEIGHT, "background-color": "#FFFFFF", "padding": "10px"}
             )
         )

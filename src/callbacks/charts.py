@@ -370,7 +370,7 @@ def register_callbacks(app):
                 yaxis_title="Price to Income Ratio",
                 template="plotly_white",
                 xaxis=dict(showgrid=False, zeroline=False),
-                yaxis=dict(showgrid=False, zeroline=False)
+                yaxis=dict(showgrid=False, zeroline=False),
             )
             return fig
         
@@ -408,7 +408,7 @@ def register_callbacks(app):
                 title=dict(text="Price to Income Ratio", font=dict(size=CHART_AXIS_TITLE_FONT_SIZE, family="Roboto, sans-serif", color="#000000", weight='bold')),
                 tickfont=dict(size=CHART_AXIS_TICKFONT_FONT_SIZE, family="Roboto, sans-serif", color="#000000", weight='bold')
             ),
-            plot_bgcolor="#F5F5F5", paper_bgcolor="#FFFFFF", margin=dict(l=10, r=10, t=50, b=10)
+            plot_bgcolor="#F5F5F5", paper_bgcolor="#FFFFFF", margin=dict(l=10, r=10, t=50, b=10),
         )
         return fig
 
