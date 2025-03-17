@@ -15,9 +15,23 @@ In Milestone 4, we focused on refining the user experience and addressing perfor
 
 ## Dealing with Performance Issues
 
-Performance remains one of the most significant challenges we have faced throughout this project. During Milestone 4, we spent considerable time exploring ways to address the long loading times that some users experienced when accessing the deployed version of the dashboard on Render. We tested multiple techniques aimed at reducing load time, including data optimization strategies and experimenting with different visualization methods. However, despite our efforts, we were unable to remedy the issue. 
+Performance was one of the most significant challenges we faced throughout this project. During Milestone 4, we took several key steps to resolve the performance issues, especially the long loading times that some users experienced when accessing the deployed version of the dashboard on Render. 
 
-We attribute the long loading time to the size of the dataset and the diverse ways in which we visualize the data. Each chart and map requires different data handling processes, and as the data grows, it becomes increasingly complex to manage. Although we did not fully resolve the performance issue, we did implement strategies to at least make the experience more predictable for users.
+### Resolution of Performance Issues:
+- **Use of .feather Files**: We resolved the performance issues by switching to **.feather** files for storing location and housing data. These files are faster to load and more efficient for working with large datasets.
+- **Updated Data Loading**: We updated the **EDA.ipynb** to extract the locations and housing datasets from the raw data and save them as **.feather files**. Additionally, we modified **data_loader.py** to load these two separate dataframes into the dashboard.
+- **Integration with App**: We updated **app.py** to integrate the new **.feather** dataframes and adjusted **charts.py** and **filters.py** to ensure they are using the appropriate dataframes for their functionality.
+  
+### Optimization Techniques:
+- **Refactoring and Computation Improvements**: We focused on optimizing the dashboard's performance through refactoring and computation improvements. 
+  - We split callback functions into smaller units for better maintainability and performance.
+  - Precomputed **boxplot statistics** for cities and bedrooms during startup to reduce repetitive calculations.
+  - We reduced the amount of data sent to Altair by performing more aggregation in Python before passing data to the visualization.
+  
+- **Profiling and Parallelization**: We added profiling to the code to pinpoint specific performance bottlenecks and implemented parallelization techniques to improve processing time.
+  - We used **joblib** to parallelize chart computations, allowing for concurrency and reducing overall processing time.
+
+Although the performance was significantly improved, we are continuing to monitor the dashboard for potential further optimizations.
 
 ## Differences Compared to Initial Proposal / Sketch
 
