@@ -29,6 +29,8 @@ def create_layout(df):
                             # html.Br(),
                             # html.Br(),
                             create_summary_cards(),  # Summary cards
+                            html.Br(),
+                            html.Br(),
                             dbc.Row([
                                 dbc.Col(create_map_card(), width=6, className="h-100"),
                                 dbc.Col(create_chart1_card(), width=6, className="h-100")
